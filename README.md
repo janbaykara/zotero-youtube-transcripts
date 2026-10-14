@@ -5,7 +5,7 @@
 
 ### Install the plugin:
 
-1. [Download the extension file (.xpi)](https://github.com/janbaykara/zotero-youtube-transcripts/releases/latest/download/zotero-syllabus.xpi).
+1. [Download the extension file (.xpi)](https://github.com/janbaykara/zotero-youtube-transcripts/releases/latest/download/youtube-transcripts.xpi).
 
 2. In the Zotero menu bar, go to `Tools` → `Plugins` (or `Add-ons`)
 

@@ -12,13 +12,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lstrzepek/zotero-youtube-transcripts.git"
+    "url": "git+https://github.com/janbaykara/zotero-youtube-transcripts.git"
   },
-  "author": "lstrzepek",
+  "author": "janbaykara",
   "bugs": {
-    "url": "https://github.com/lstrzepek/zotero-youtube-transcripts/issues"
+    "url": "https://github.com/janbaykara/zotero-youtube-transcripts/issues"
   },
-  "homepage": "https://github.com/lstrzepek/zotero-youtube-transcripts#readme",
+  "homepage": "https://github.com/janbaykara/zotero-youtube-transcripts#readme",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "build:css": "npx @tailwindcss/cli -i ./src/tailwind.css -o ./addon/content/tailwind.css --minify",
