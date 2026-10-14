@@ -9,8 +9,8 @@
  */
 .tab[data-id^="yt-watch-"] .tab-icon.icon-item-type,
 .tab[data-id^="yt-watch-"] .tab-icon {
-  background: url("chrome://__addonRef__/content/icons/youtube.svg")
-    no-repeat center / contain !important;
+  background: url("chrome://__addonRef__/content/icons/youtube.svg") no-repeat
+    center / contain !important;
 }
 
 /* Ensure custom watch tabs fill the Zotero tab deck. */

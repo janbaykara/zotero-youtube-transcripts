@@ -82,8 +82,7 @@ function ColorRow({
           key={id}
           type="button"
           className={`yt-watch-color-swatch${
-            selected &&
-            selected.toLowerCase() === color.toLowerCase()
+            selected && selected.toLowerCase() === color.toLowerCase()
               ? " selected"
               : ""
           }`}

@@ -155,9 +155,7 @@ export function DisplaySettingsPopover({
           aria-label={getString("watch-display-size")}
           aria-valuetext={`${WATCH_FONT_SIZE_STEPS[fontSizeIndex]}px`}
           onInput={(e) =>
-            onFontSizeIndex(
-              Number((e.currentTarget as HTMLInputElement).value),
-            )
+            onFontSizeIndex(Number((e.currentTarget as HTMLInputElement).value))
           }
         />
         <span className="yt-watch-display-size-a large" aria-hidden="true">

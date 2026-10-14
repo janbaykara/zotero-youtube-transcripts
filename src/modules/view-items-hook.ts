@@ -119,7 +119,10 @@ export function unregisterViewItemsHook(win: _ZoteroTypes.MainWindow): void {
   const record = wraps.get(pane);
   if (!record) return;
   // Only unwrap if we are still the outermost handler.
-  if (pane.onItemTreeActivate === record.wrapped || isOurWrap(pane.onItemTreeActivate)) {
+  if (
+    pane.onItemTreeActivate === record.wrapped ||
+    isOurWrap(pane.onItemTreeActivate)
+  ) {
     pane.onItemTreeActivate = record.next;
   }
   wraps.delete(pane);

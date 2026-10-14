@@ -87,7 +87,10 @@ export function registerWatchTabSelectionSync(): string {
       if (type !== "tab" || event !== "select") return;
       const tabID = String(ids[0] ?? "");
       const tabType = extraData?.[tabID]?.type;
-      if (tabType !== WATCH_TAB_TYPE && !tabID.startsWith(`${WATCH_TAB_TYPE}-`)) {
+      if (
+        tabType !== WATCH_TAB_TYPE &&
+        !tabID.startsWith(`${WATCH_TAB_TYPE}-`)
+      ) {
         return;
       }
       void syncLibrarySelectionForWatchTab(tabID);
@@ -124,10 +127,8 @@ async function selectItemInLibrary(itemID: number): Promise<void> {
     ? item.id
     : item.parentItemID || item.id;
   const win = Zotero.getMainWindow();
-  const pane = (
-    Zotero.getActiveZoteroPane?.() ||
-    (win as { ZoteroPane?: unknown } | null)?.ZoteroPane
-  ) as
+  const pane = (Zotero.getActiveZoteroPane?.() ||
+    (win as { ZoteroPane?: unknown } | null)?.ZoteroPane) as
     | {
         selectItem: (
           id: number,

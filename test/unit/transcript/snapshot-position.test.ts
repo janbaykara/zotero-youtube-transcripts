@@ -18,11 +18,11 @@ const transcript: TranscriptResponse = {
   ],
 };
 
-describe("buildSnapshotHighlightPosition", function () {
-  const html = formatTranscriptHtml(transcript, "https://youtu.be/dQw4w9WgXcQ", {
-    timestampMod: 1,
-  });
+const html = formatTranscriptHtml(transcript, "https://youtu.be/dQw4w9WgXcQ", {
+  timestampMod: 1,
+});
 
+describe("buildSnapshotHighlightPosition", function () {
   it("anchors single-line selections on #yt-l-* with cell offsets", function () {
     const built = buildSnapshotHighlightPosition(html, [
       { lineOffsetMs: 0, start: 6, end: 11, text: "world" },
@@ -62,8 +62,8 @@ describe("buildSnapshotHighlightPosition", function () {
     const cell = cellTextRangeInTbody(tbody, transcriptLineAnchorId(2000));
     expect(cell).to.not.equal(null);
     expect(cell!.text).to.equal("Second line");
-    expect(
-      flattenHtmlTextNodes(tbody).slice(cell!.start, cell!.end),
-    ).to.equal("Second line");
+    expect(flattenHtmlTextNodes(tbody).slice(cell!.start, cell!.end)).to.equal(
+      "Second line",
+    );
   });
 });

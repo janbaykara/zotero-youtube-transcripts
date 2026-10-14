@@ -150,7 +150,9 @@ export async function repairTranscriptAnnotationPositions(
     const id = String(pos.value || "").replace(/^#/, "");
     const match = id
       ? file.html.match(
-          new RegExp(`id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}">([^<]*)`),
+          new RegExp(
+            `id="${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}">([^<]*)`,
+          ),
         )
       : null;
     const cell = match?.[1] ?? "";

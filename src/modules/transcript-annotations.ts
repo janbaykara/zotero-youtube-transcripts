@@ -104,7 +104,9 @@ function isHighlightItem(item: Zotero.Item): boolean {
   return type === "highlight" || type === 1 || type === "1";
 }
 
-function parsePosition(raw: string | null | undefined): AnnotationPosition | null {
+function parsePosition(
+  raw: string | null | undefined,
+): AnnotationPosition | null {
   if (!raw) return null;
   try {
     const pos =
@@ -515,9 +517,7 @@ export async function createTranscriptHighlights(
 
   const first = usable[0];
   const html = await readAttachmentHtml(attachment);
-  const built = html
-    ? buildSnapshotHighlightPosition(html, usable)
-    : null;
+  const built = html ? buildSnapshotHighlightPosition(html, usable) : null;
 
   // Fallback: single-line cell anchor (or first line only if HTML unavailable).
   const position =
@@ -560,7 +560,8 @@ export async function createTranscriptHighlights(
       comment: "",
       color,
       pageLabel: formatTimestamp(first.lineOffsetMs),
-      sortIndex: built?.sortIndex ?? String(first.lineOffsetMs).padStart(8, "0"),
+      sortIndex:
+        built?.sortIndex ?? String(first.lineOffsetMs).padStart(8, "0"),
       position,
     } as any);
     return item ? [item] : [];
@@ -794,7 +795,8 @@ export function rangesBetweenCarets(
   const out: TranscriptSelectionRange[] = [];
   for (let k = i; k <= j; k++) {
     const line = lines[k];
-    const startPos = k === i ? Math.max(0, Math.min(line.text.length, startOff)) : 0;
+    const startPos =
+      k === i ? Math.max(0, Math.min(line.text.length, startOff)) : 0;
     const endPos =
       k === j
         ? Math.max(startPos, Math.min(line.text.length, endOff))

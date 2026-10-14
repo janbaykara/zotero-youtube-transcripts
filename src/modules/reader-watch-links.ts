@@ -1,8 +1,5 @@
 import { watchProtocolExtensionSpec } from "./watch-protocol-url";
-import {
-  TRANSCRIPT_ATTACHMENT_TITLE,
-  TRANSCRIPT_TAG,
-} from "./youtube-item";
+import { TRANSCRIPT_ATTACHMENT_TITLE, TRANSCRIPT_TAG } from "./youtube-item";
 
 type ReaderView = {
   _iframeWindow?: Window;

@@ -105,11 +105,7 @@ tab-content[id^="yt-watch-"],
   justify-content: center;
   padding: 0.2rem 0.45rem;
   border-radius: 4px;
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 14%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 14%, transparent);
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -286,11 +282,7 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-display-font:hover {
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 8%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 8%, transparent);
 }
 
 .yt-watch-display-font.selected {
@@ -299,11 +291,7 @@ tab-content[id^="yt-watch-"],
     var(--accent-blue, #2ea8e5) 45%,
     transparent
   );
-  background: color-mix(
-    in srgb,
-    var(--accent-blue, #2ea8e5) 10%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--accent-blue, #2ea8e5) 10%, transparent);
 }
 
 .yt-watch-display-font-sample {
@@ -318,7 +306,12 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-display-font.sans .yt-watch-display-font-sample {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 .yt-watch-display-font-label {
@@ -381,11 +374,7 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-display-spacing-btn:hover {
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 10%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 10%, transparent);
 }
 
 .yt-watch-display-spacing-btn.selected {
@@ -411,19 +400,11 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-tool-btn:hover {
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 12%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 12%, transparent);
 }
 
 .yt-watch-tool-btn:active {
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 18%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 18%, transparent);
 }
 
 .yt-watch-tool-btn img {
@@ -605,11 +586,7 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-line:hover {
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 8%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 8%, transparent);
 }
 
 .yt-watch-line.active::before {

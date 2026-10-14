@@ -38,10 +38,7 @@ import {
   unbindWatchTabAudio,
 } from "../watch-tab-audio";
 import { watchTabId } from "../watch-tab";
-import {
-  subscribeWatchSeek,
-  takePendingWatchSeek,
-} from "../watch-seek";
+import { subscribeWatchSeek, takePendingWatchSeek } from "../watch-seek";
 import { DisplaySettingsPopover } from "./DisplaySettingsPopover";
 import { HighlightPopover } from "./HighlightPopover";
 import { TranscriptPane } from "./TranscriptPane";
@@ -293,9 +290,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
       try {
         await updateTranscriptHighlight(id, { color });
         setEditingHighlight((prev) =>
-          prev
-            ? { ...prev, highlight: { ...prev.highlight, color } }
-            : prev,
+          prev ? { ...prev, highlight: { ...prev.highlight, color } } : prev,
         );
         if (attachmentID != null) {
           invalidateAttachmentHighlights(attachmentID);

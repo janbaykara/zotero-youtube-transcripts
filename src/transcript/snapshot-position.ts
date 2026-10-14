@@ -201,8 +201,7 @@ function multiLinePositionFromString(
   if (!startCell || !endCell) return null;
 
   const start =
-    startCell.start +
-    Math.max(0, Math.min(startCell.text.length, first.start));
+    startCell.start + Math.max(0, Math.min(startCell.text.length, first.start));
   const end =
     endCell.start + Math.max(0, Math.min(endCell.text.length, last.end));
   if (end <= start) return null;

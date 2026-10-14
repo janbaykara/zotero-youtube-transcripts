@@ -361,7 +361,9 @@ export function TranscriptPane({
                       <div
                         key={`comment-${mark.id}`}
                         className={`yt-watch-line-comment${
-                          commentIndex > 0 ? " yt-watch-line-comment-follow" : ""
+                          commentIndex > 0
+                            ? " yt-watch-line-comment-follow"
+                            : ""
                         }`}
                         data-annotation-id={String(mark.id)}
                         role="button"

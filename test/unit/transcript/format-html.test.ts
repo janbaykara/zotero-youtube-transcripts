@@ -58,8 +58,7 @@ describe("formatTranscriptHtml", function () {
   });
 
   it("links timestamps to the watch tab when watchUrl is set", function () {
-    const watchUrl =
-      "zotero://youtubetranscripts/watch/library/items/ABCD1234";
+    const watchUrl = "zotero://youtubetranscripts/watch/library/items/ABCD1234";
     const html = formatTranscriptHtml(transcript, url, {
       timestampMod: 2,
       watchUrl,
@@ -89,8 +88,7 @@ describe("formatTranscriptHtml", function () {
   });
 
   it("includes a watch-tab link when watchUrl is provided", function () {
-    const watchUrl =
-      "zotero://youtubetranscripts/watch/library/items/ABCD1234";
+    const watchUrl = "zotero://youtubetranscripts/watch/library/items/ABCD1234";
     const html = formatTranscriptHtml(transcript, url, {
       timestampMod: 2,
       watchUrl,

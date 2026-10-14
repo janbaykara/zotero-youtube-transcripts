@@ -8,9 +8,7 @@ export type WatchFont = "serif" | "sans";
 export const WATCH_FONT_SIZE_STEPS = [12, 13, 14, 15, 16, 18, 20] as const;
 
 /** Discrete line-heights. Default index 2 → 1.45. */
-export const WATCH_LINE_SPACING_STEPS = [
-  1.2, 1.35, 1.45, 1.65, 1.9,
-] as const;
+export const WATCH_LINE_SPACING_STEPS = [1.2, 1.35, 1.45, 1.65, 1.9] as const;
 
 export const WATCH_DISPLAY_DEFAULTS = {
   font: "serif" as WatchFont,

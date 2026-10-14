@@ -58,9 +58,7 @@ function plainTextToHtml(text: string): string {
 
 /** Normalize HTML so it can be assigned via innerHTML in XHTML documents. */
 function toXhtmlFragment(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, "<br/>")
-    .replace(/<hr\s*\/?>/gi, "<hr/>");
+  return html.replace(/<br\s*\/?>/gi, "<br/>").replace(/<hr\s*\/?>/gi, "<hr/>");
 }
 
 function sanitizeHref(href: string): string | null {
@@ -166,5 +164,7 @@ export function formatLineCommentsHtml(comments: string[]): string {
     .filter(Boolean);
   if (parts.length === 0) return "";
   if (parts.length === 1) return parts[0];
-  return parts.map((html) => `<div class="yt-watch-comment-block">${html}</div>`).join("");
+  return parts
+    .map((html) => `<div class="yt-watch-comment-block">${html}</div>`)
+    .join("");
 }
