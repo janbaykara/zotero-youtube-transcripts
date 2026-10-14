@@ -1,6 +1,23 @@
 # YouTube Transcripts for Zotero
 
-Fetch YouTube captions into Zotero as a self-contained HTML attachment you can open and annotate in Zotero’s reader.
+- Fetch YouTube captions into Zotero as a self-contained HTML attachment you can open and annotate in Zotero’s reader.
+- Open and play youtube videos in Zotero, with a play-along transcript that you can annotate.
+
+### Install the plugin:
+
+1. [Download the extension file (.xpi)](https://github.com/janbaykara/zotero-youtube-transcripts/releases/latest/download/zotero-syllabus.xpi).
+
+2. In the Zotero menu bar, go to `Tools` → `Plugins` (or `Add-ons`)
+
+3. Click the gear icon in the top right corner and select `Install Plugin From File...`
+
+4. Select the downloaded `.xpi` file
+
+5. (Ensure auto-updating is enabled for this add-on too!)
+
+6. Restart Zotero!
+
+![YouTube Transcripts for Zotero](doc/screenshot.png)
 
 ## Features
 
