@@ -27,8 +27,9 @@ async function startup({ id, version, resourceURI, rootURI }, reason) {
   const ctx = { rootURI };
   ctx._globalThis = ctx;
 
+  // Bust scriptloader cache so scaffold/hot reload picks up rebuilt bundles.
   Services.scriptloader.loadSubScript(
-    `${rootURI}/content/scripts/__addonRef__.js`,
+    `${rootURI}/content/scripts/__addonRef__.js?t=${Date.now()}`,
     ctx,
   );
   await Zotero.__addonInstance__.hooks.onStartup();

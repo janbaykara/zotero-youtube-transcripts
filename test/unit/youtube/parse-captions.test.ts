@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { parseCaptionXml } from "../../../src/youtube/parse-captions";
 
-describe("parseCaptionXml", function() {
-  it("parses <text> tag format", function() {
+describe("parseCaptionXml", function () {
+  it("parses <text> tag format", function () {
     const xml = `<?xml version="1.0" encoding="utf-8" ?>
       <transcript>
         <text start="0.5" dur="2.5">Hello world</text>
@@ -17,7 +17,7 @@ describe("parseCaptionXml", function() {
     expect(lines[0].duration).to.equal(2500);
   });
 
-  it("parses <p> tag format", function() {
+  it("parses <p> tag format", function () {
     const xml = `<?xml version="1.0" encoding="utf-8" ?>
       <timedtext>
         <p t="500" d="2500">Hello world</p>
@@ -31,7 +31,7 @@ describe("parseCaptionXml", function() {
     expect(lines[0].duration).to.equal(2500);
   });
 
-  it("decodes HTML entities and strips tags", function() {
+  it("decodes HTML entities and strips tags", function () {
     const xml = `<?xml version="1.0" encoding="utf-8" ?>
       <transcript>
         <text start="0" dur="1">Tom &amp; Jerry</text>
@@ -44,7 +44,7 @@ describe("parseCaptionXml", function() {
     expect(lines[1].text).to.equal("Hello world");
   });
 
-  it("skips empty text entries", function() {
+  it("skips empty text entries", function () {
     const xml = `<?xml version="1.0" encoding="utf-8" ?>
       <transcript>
         <text start="0" dur="1">Hello</text>

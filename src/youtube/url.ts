@@ -12,32 +12,40 @@ const YOUTUBE_DOMAINS = new Set([
 
 const VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
 
-export function isValidYouTubeUrl(url: string | null | undefined): boolean {
-  if (!url || typeof url !== "string") return false;
+export function extractVideoId(url: string | null | undefined): string | null {
+  if (!url || typeof url !== "string") return null;
+
+  const bare = url.trim();
+  if (VIDEO_ID_PATTERN.test(bare)) return bare;
 
   let parsed: URL;
   try {
-    parsed = new URL(url);
+    parsed = new URL(bare);
   } catch {
-    return false;
+    return null;
   }
 
   const hostname = parsed.hostname.toLowerCase();
-  if (!YOUTUBE_DOMAINS.has(hostname)) return false;
+  if (!YOUTUBE_DOMAINS.has(hostname)) return null;
 
   if (hostname.endsWith("youtu.be")) {
-    const [, videoId] = parsed.pathname.split("/");
-    return VIDEO_ID_PATTERN.test(videoId ?? "");
+    const videoId = parsed.pathname.split("/").filter(Boolean)[0] ?? "";
+    return VIDEO_ID_PATTERN.test(videoId) ? videoId : null;
   }
 
   if (parsed.pathname === "/watch") {
-    return VIDEO_ID_PATTERN.test(parsed.searchParams.get("v") ?? "");
+    const videoId = parsed.searchParams.get("v") ?? "";
+    return VIDEO_ID_PATTERN.test(videoId) ? videoId : null;
   }
 
   const pathMatch = parsed.pathname.match(
     /^\/(?:embed|shorts|v|live)\/([a-zA-Z0-9_-]{11})(?:\/|$)/,
   );
-  return pathMatch !== null;
+  return pathMatch?.[1] ?? null;
+}
+
+export function isValidYouTubeUrl(url: string | null | undefined): boolean {
+  return extractVideoId(url) !== null;
 }
 
 export function extractYouTubeUrlFromText(

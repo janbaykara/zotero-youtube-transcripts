@@ -1,5 +1,30 @@
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+
 import { defineConfig } from "zotero-plugin-scaffold";
+
 import pkg from "./package.json";
+
+const require = createRequire(import.meta.url);
+const preactRoot = dirname(require.resolve("preact/package.json"));
+
+/**
+ * file: deps under zotero-syllabus bring their own nested `preact`, which
+ * duplicates hooks state (`__H` undefined). Pin every Preact import here.
+ */
+const preactAliases = {
+  preact: join(preactRoot, "dist/preact.module.js"),
+  "preact/hooks": join(preactRoot, "hooks/dist/hooks.module.js"),
+  "preact/jsx-runtime": join(
+    preactRoot,
+    "jsx-runtime/dist/jsxRuntime.module.js",
+  ),
+  "preact/jsx-dev-runtime": join(
+    preactRoot,
+    "jsx-runtime/dist/jsxRuntime.module.js",
+  ),
+  "preact/compat": join(preactRoot, "compat/dist/compat.module.js"),
+};
 
 export default defineConfig({
   source: ["src", "addon"],
@@ -35,6 +60,14 @@ export default defineConfig({
         bundle: true,
         target: "firefox115",
         outfile: `.scaffold/build/addon/content/scripts/${pkg.config.addonRef}.js`,
+        jsx: "automatic",
+        jsxImportSource: "preact",
+        alias: {
+          ...preactAliases,
+          react: preactAliases["preact/compat"],
+          "react-dom": preactAliases["preact/compat"],
+          "react/jsx-runtime": preactAliases["preact/jsx-runtime"],
+        },
       },
     ],
   },
@@ -42,7 +75,4 @@ export default defineConfig({
   test: {
     waitForPlugin: `() => Zotero.${pkg.config.addonInstance}.data.initialized`,
   },
-
-  // If you need to see a more detailed log, uncomment the following line:
-  // logLevel: "trace",
 });

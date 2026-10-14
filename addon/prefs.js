@@ -2,3 +2,8 @@ pref("lang", "en");
 pref("country", "US");
 pref("timestampMod", 5);
 pref("autoFetch", false);
+pref("watchAutoscroll", true);
+pref("watchSplitPercent", 50);
+pref("watchFont", "serif");
+pref("watchFontSize", 3);
+pref("watchLineSpacing", 2);

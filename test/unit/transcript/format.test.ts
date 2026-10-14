@@ -16,8 +16,8 @@ const mockTranscriptResponse: TranscriptResponse = {
 
 const testUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
-describe("formatTranscript", function() {
-  it("formats minimal template as plain text", function() {
+describe("formatTranscript", function () {
+  it("formats minimal template as plain text", function () {
     const result = formatTranscript(mockTranscriptResponse, testUrl, {
       timestampMod: 5,
       template: "minimal",
@@ -27,7 +27,7 @@ describe("formatTranscript", function() {
     );
   });
 
-  it("includes timestamp links in standard template", function() {
+  it("includes timestamp links in standard template", function () {
     const result = formatTranscript(mockTranscriptResponse, testUrl, {
       timestampMod: 2,
       template: "standard",
@@ -40,7 +40,7 @@ describe("formatTranscript", function() {
     );
   });
 
-  it("includes title and source in rich template", function() {
+  it("includes title and source in rich template", function () {
     const result = formatTranscript(mockTranscriptResponse, testUrl, {
       timestampMod: 2,
       template: "rich",
@@ -51,7 +51,7 @@ describe("formatTranscript", function() {
     );
   });
 
-  it("returns empty string for empty transcript", function() {
+  it("returns empty string for empty transcript", function () {
     const result = formatTranscript({ title: "Empty", lines: [] }, testUrl, {
       timestampMod: 5,
     });

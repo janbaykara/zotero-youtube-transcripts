@@ -11,6 +11,11 @@ declare namespace _ZoteroTypes {
       "country": string;
       "timestampMod": number;
       "autoFetch": boolean;
+      "watchAutoscroll": boolean;
+      "watchSplitPercent": number;
+      "watchFont": string;
+      "watchFontSize": number;
+      "watchLineSpacing": number;
     };
   }
 }

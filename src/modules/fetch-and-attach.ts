@@ -7,6 +7,7 @@ import {
   YouTubeTranscriptError,
 } from "../youtube/types";
 import { zoteroHttp } from "./zotero-http";
+import { buildWatchProtocolUrl } from "./watch-protocol-url";
 import {
   findTranscriptAttachment,
   getRegularItem,
@@ -78,7 +79,11 @@ export async function fetchAndAttachTranscript(
       progress: 70,
     });
 
-    const html = formatTranscriptHtml(transcript, url, { timestampMod });
+    const html = formatTranscriptHtml(transcript, url, {
+      timestampMod,
+      watchUrl: buildWatchProtocolUrl(parent),
+      watchLabel: getString("transcript-html-open-watch"),
+    });
     if (!html) {
       throw new Error("Formatted transcript was empty");
     }
@@ -99,6 +104,10 @@ export async function fetchAndAttachTranscript(
       charset: "utf-8",
     });
 
+    // importFromFile creates LINK_MODE_IMPORTED_FILE; the snapshot reader (and
+    // CssSelector annotation positions) require LINK_MODE_IMPORTED_URL.
+    attachment.attachmentLinkMode = Zotero.Attachments.LINK_MODE_IMPORTED_URL;
+    attachment.setField("url", url);
     attachment.addTag(TRANSCRIPT_TAG);
     await attachment.saveTx();
 

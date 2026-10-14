@@ -21,8 +21,9 @@
   "homepage": "https://github.com/lstrzepek/zotero-youtube-transcripts#readme",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "start": "zotero-plugin serve",
-    "build": "zotero-plugin build && tsc --noEmit",
+    "build:css": "npx @tailwindcss/cli -i ./src/tailwind.css -o ./addon/content/tailwind.css --minify",
+    "start": "npm run build:css && zotero-plugin serve",
+    "build": "npm run build:css && zotero-plugin build && tsc --noEmit",
     "lint:check": "prettier --check . && eslint .",
     "lint:fix": "prettier --write . && eslint . --fix",
     "release": "zotero-plugin release",
@@ -31,9 +32,21 @@
     "update-deps": "npm update --save"
   },
   "dependencies": {
+    "@janbaykara/zotero-cache": "file:../zotero-syllabus/packages/zotero-cache",
+    "@janbaykara/zotero-chrome": "file:../zotero-syllabus/packages/zotero-chrome",
+    "@janbaykara/zotero-jotai-state": "file:../zotero-syllabus/packages/zotero-jotai-state",
+    "@janbaykara/zotero-preact": "file:../zotero-syllabus/packages/zotero-preact",
+    "@janbaykara/zotero-tailwind-theme": "file:../zotero-syllabus/packages/zotero-tailwind-theme",
+    "jotai": "^3.0.1",
+    "jotai-family": "^1.1.0",
+    "lru-cache": "^11.5.2",
+    "preact": "^10.29.8",
+    "verzod": "^0.5.1",
+    "zod": "^3.25.76",
     "zotero-plugin-toolkit": "^5.1.0-beta.13"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.11",
     "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.10.0",
@@ -42,10 +55,14 @@
     "eslint": "^9.39.2",
     "mocha": "^11.7.5",
     "prettier": "^3.7.4",
+    "tailwindcss": "^4.1.11",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "zotero-plugin-scaffold": "^0.8.2",
     "zotero-types": "^4.1.0-beta.4"
+  },
+  "overrides": {
+    "@janbaykara/zotero-jotai-state": "file:../zotero-syllabus/packages/zotero-jotai-state"
   },
   "prettier": {
     "printWidth": 80,

@@ -4,3 +4,6 @@ pref-country = 国家/地区代码 (gl)
 pref-timestamp-mod = 每个时间戳的行数
 pref-auto-fetch =
     .label = 添加 YouTube 条目时自动获取字幕
+pref-watch-autoscroll =
+    .label = 观看时自动滚动字幕
+pref-watch-split = 播放器高度（%）

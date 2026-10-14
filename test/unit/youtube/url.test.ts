@@ -1,12 +1,25 @@
 import { expect } from "chai";
 import {
+  extractVideoId,
   extractYouTubeUrlFromText,
   isValidYouTubeUrl,
 } from "../../../src/youtube/url";
 
-describe("youtube/url", function() {
-  describe("isValidYouTubeUrl", function() {
-    it("validates youtube.com and youtu.be URLs", function() {
+describe("youtube/url", function () {
+  describe("extractVideoId", function () {
+    it("extracts ids from common URL shapes", function () {
+      expect(
+        extractVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
+      ).to.equal("dQw4w9WgXcQ");
+      expect(extractVideoId("https://youtu.be/dQw4w9WgXcQ")).to.equal(
+        "dQw4w9WgXcQ",
+      );
+      expect(extractVideoId("dQw4w9WgXcQ")).to.equal("dQw4w9WgXcQ");
+    });
+  });
+
+  describe("isValidYouTubeUrl", function () {
+    it("validates youtube.com and youtu.be URLs", function () {
       expect(
         isValidYouTubeUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
       ).to.equal(true);
@@ -22,7 +35,7 @@ describe("youtube/url", function() {
       ).to.equal(true);
     });
 
-    it("rejects non-YouTube and malformed URLs", function() {
+    it("rejects non-YouTube and malformed URLs", function () {
       expect(isValidYouTubeUrl("https://www.google.com")).to.equal(false);
       expect(isValidYouTubeUrl("not a url")).to.equal(false);
       expect(isValidYouTubeUrl("")).to.equal(false);
@@ -31,8 +44,8 @@ describe("youtube/url", function() {
     });
   });
 
-  describe("extractYouTubeUrlFromText", function() {
-    it("extracts the first YouTube URL from mixed text", function() {
+  describe("extractYouTubeUrlFromText", function () {
+    it("extracts the first YouTube URL from mixed text", function () {
       const text =
         "Check https://www.google.com and https://www.youtube.com/watch?v=dQw4w9WgXcQ";
       expect(extractYouTubeUrlFromText(text)).to.equal(
@@ -40,7 +53,7 @@ describe("youtube/url", function() {
       );
     });
 
-    it("returns null when no YouTube URL is present", function() {
+    it("returns null when no YouTube URL is present", function () {
       expect(extractYouTubeUrlFromText("no links here")).to.equal(null);
       expect(extractYouTubeUrlFromText("")).to.equal(null);
     });

@@ -4,3 +4,6 @@ pref-country = Country code (gl)
 pref-timestamp-mod = Lines per timestamp
 pref-auto-fetch =
     .label = Automatically fetch transcript when a YouTube item is added
+pref-watch-autoscroll =
+    .label = Autoscroll transcript while watching
+pref-watch-split = Player height (%)

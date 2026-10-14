@@ -12,6 +12,7 @@ class Addon {
     locale?: {
       current: any;
     };
+    dialog?: any;
   };
   public hooks: typeof hooks;
   public api: object;
@@ -23,6 +24,7 @@ class Addon {
       env: __env__,
       initialized: false,
       ztoolkit: createZToolkit(),
+      dialog: undefined,
     };
     this.hooks = hooks;
     this.api = {};

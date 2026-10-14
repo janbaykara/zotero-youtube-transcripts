@@ -1,10 +1,19 @@
-import { buildTimestampUrl } from "../youtube/url";
-import { getTranscriptBlocks } from "./blocks";
+import { buildTimestampUrl, extractVideoId } from "../youtube/url";
+import {
+  TRANSCRIPT_DATA_SCRIPT_ID,
+  buildEmbeddedTranscriptData,
+  serializeEmbeddedTranscriptData,
+} from "./embedded-data";
+import { transcriptLineAnchorId } from "./line-anchor";
 import { formatTimestamp } from "./timestamp";
 import type { TranscriptResponse } from "./types";
 
 export interface HtmlFormatOptions {
   timestampMod: number;
+  /** zotero:// URL that opens the watch tab for the parent item. */
+  watchUrl?: string;
+  /** Visible label for the watch-tab link (defaults to English). */
+  watchLabel?: string;
 }
 
 export function formatTranscriptHtml(
@@ -24,16 +33,35 @@ export function formatTranscriptHtml(
   const today = new Date().toISOString().split("T")[0];
   const sourceUrl = url || "";
   const sourceHref = escapeHtml(sourceUrl);
-  const blocks = getTranscriptBlocks(transcript.lines, timestampMod);
+  const videoId = extractVideoId(url) || "";
+  const lines = transcript.lines.filter((line) => line.text.trim().length > 0);
 
-  const bodyRows = blocks
-    .map(({ quote, quoteTimeOffset }) => {
-      const timestamp = formatTimestamp(quoteTimeOffset);
-      const href = url ? buildTimestampUrl(url, quoteTimeOffset) : "#";
-      const text = escapeHtml(quote.trim());
+  const embedded = serializeEmbeddedTranscriptData(
+    buildEmbeddedTranscriptData(transcript, url, videoId),
+  );
+
+  // One row per caption line (matches the watch tab) with a stable CSS id so
+  // snapshot annotations can target the same text from the reader or watch UI.
+  // Timestamp links open the watch tab at that offset when watchUrl is set.
+  const bodyRows = lines
+    .map((line, index) => {
+      const showTimestamp = index % timestampMod === 0;
+      const timestamp = formatTimestamp(line.offset);
+      const href = options.watchUrl
+        ? `${options.watchUrl}?t=${Math.max(0, Math.floor(line.offset))}`
+        : url
+          ? buildTimestampUrl(url, line.offset)
+          : "#";
+      const text = escapeHtml(line.text.trim());
+      const anchor = transcriptLineAnchorId(line.offset);
+      // Timestamp label is CSS `attr(data-time)` so reader multi-line
+      // selections don't ingest "00:22" into annotation quotes.
+      const tsCell = showTimestamp
+        ? `<td class="ts"><a href="${escapeHtml(href)}" data-time="${escapeHtml(timestamp)}" aria-label="${escapeHtml(timestamp)}"></a></td>`
+        : `<td class="ts"></td>`;
       return `    <tr>
-      <td class="ts"><a href="${escapeHtml(href)}">${escapeHtml(timestamp)}</a></td>
-      <td class="text">${text}</td>
+      ${tsCell}
+      <td class="text" id="${anchor}">${text}</td>
     </tr>`;
     })
     .join("\n");
@@ -90,6 +118,9 @@ export function formatTranscriptHtml(
     font-weight: 600;
     font-size: 0.9rem;
   }
+  table.transcript td.ts a::before {
+    content: attr(data-time);
+  }
   table.transcript td.ts a:hover {
     text-decoration: underline;
   }
@@ -103,7 +134,13 @@ export function formatTranscriptHtml(
   <h1>${title}</h1>
   <p class="meta">
     Source: ${sourceUrl ? `<a href="${sourceHref}">${sourceHref}</a>` : "Unknown"}
-    · Retrieved: ${escapeHtml(today)}
+    · Retrieved: ${escapeHtml(today)}${
+      options.watchUrl
+        ? ` · <a class="watch" href="${escapeHtml(options.watchUrl)}">${escapeHtml(
+            options.watchLabel || "Open watch tab",
+          )}</a>`
+        : ""
+    }
   </p>
   <table class="transcript">
     <tbody>
@@ -111,6 +148,9 @@ ${bodyRows}
     </tbody>
   </table>
 </article>
+<script type="application/json" id="${TRANSCRIPT_DATA_SCRIPT_ID}">
+${embedded}
+</script>
 </body>
 </html>
 `;
