@@ -1,0 +1,11 @@
+startup-begin = YouTube Transcripts 正在加载
+startup-finish = YouTube Transcripts 已就绪
+prefs-title = YouTube Transcripts
+menuitem-get-transcript = 获取 YouTube 字幕
+progress-fetching = 正在获取字幕…
+progress-attaching = 正在保存字幕…
+progress-done = 字幕已附加
+progress-error = 无法获取字幕
+progress-ip-blocked = YouTube 已拦截此请求（IP/机器人检测）。请关闭 VPN 后重试。
+progress-skip-existing = 字幕已存在
+progress-no-url = 所选条目没有 YouTube 链接

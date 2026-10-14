@@ -1,0 +1,45 @@
+<linkset>
+  <html:link rel="localization" href="__addonRef__-preferences.ftl" />
+</linkset>
+<groupbox>
+  <label><html:h2 data-l10n-id="pref-title"></html:h2></label>
+  <hbox align="center">
+    <html:label
+      for="zotero-prefpane-__addonRef__-lang"
+      data-l10n-id="pref-lang"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-lang"
+      preference="lang"
+    ></html:input>
+  </hbox>
+  <hbox align="center">
+    <html:label
+      for="zotero-prefpane-__addonRef__-country"
+      data-l10n-id="pref-country"
+    ></html:label>
+    <html:input
+      type="text"
+      id="zotero-prefpane-__addonRef__-country"
+      preference="country"
+    ></html:input>
+  </hbox>
+  <hbox align="center">
+    <html:label
+      for="zotero-prefpane-__addonRef__-timestampMod"
+      data-l10n-id="pref-timestamp-mod"
+    ></html:label>
+    <html:input
+      type="number"
+      min="1"
+      id="zotero-prefpane-__addonRef__-timestampMod"
+      preference="timestampMod"
+    ></html:input>
+  </hbox>
+  <checkbox
+    id="zotero-prefpane-__addonRef__-autoFetch"
+    preference="autoFetch"
+    data-l10n-id="pref-auto-fetch"
+  />
+</groupbox>

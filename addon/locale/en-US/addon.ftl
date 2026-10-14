@@ -1,0 +1,11 @@
+startup-begin = YouTube Transcripts is loading
+startup-finish = YouTube Transcripts is ready
+prefs-title = YouTube Transcripts
+menuitem-get-transcript = Get YouTube Transcript
+progress-fetching = Fetching transcript…
+progress-attaching = Saving transcript…
+progress-done = Transcript attached
+progress-error = Could not fetch transcript
+progress-ip-blocked = YouTube blocked this request (IP/bot check). Disable your VPN and try again.
+progress-skip-existing = Transcript already exists
+progress-no-url = No YouTube URL on selected item
