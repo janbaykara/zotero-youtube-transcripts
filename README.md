@@ -11,7 +11,7 @@ Fetch YouTube captions into Zotero as a self-contained HTML attachment you can o
 
 ## Requirements
 
-- Zotero 7+
+- Zotero 7 through 10
 
 ## Development
 
