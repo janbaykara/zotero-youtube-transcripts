@@ -15,9 +15,7 @@ export function buildWatchProtocolUrl(
   let base: string;
   try {
     const library = Zotero.Libraries.get(libraryID) as
-      | { isGroup?: boolean }
-      | false
-      | undefined;
+      { isGroup?: boolean } | false | undefined;
     if (library && library.isGroup) {
       const groupID = Zotero.Groups.getGroupIDFromLibraryID(libraryID);
       if (groupID) {

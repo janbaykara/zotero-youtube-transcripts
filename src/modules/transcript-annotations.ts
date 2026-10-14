@@ -446,7 +446,7 @@ export async function loadAttachmentHighlights(
   } catch {
     // ignore
   }
-  let annotations: Zotero.Item[] = [];
+  let annotations: Zotero.Item[];
   try {
     annotations = attachment.getAnnotations?.(false) || [];
   } catch (err) {
@@ -755,7 +755,7 @@ export function lineCaretAtPoint(
   );
   if (!Number.isFinite(lineOffsetMs)) return null;
 
-  let charOffset = 0;
+  let charOffset: number;
   if (textRoot.contains(node) || node === textRoot) {
     charOffset = textOffsetInElement(textRoot, node, offset);
   } else {

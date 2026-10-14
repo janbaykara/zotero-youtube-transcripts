@@ -170,8 +170,7 @@ function EditPopover({
 
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as
-        | (EventTarget & { closest?: (s: string) => Element | null })
-        | null;
+        (EventTarget & { closest?: (s: string) => Element | null }) | null;
       if (!target?.closest) return;
 
       // Keep interactions inside the popover (incl. Remove).

@@ -32,18 +32,18 @@
     "update-deps": "npm update --save"
   },
   "dependencies": {
-    "@janbaykara/zotero-cache": "file:../zotero-syllabus/packages/zotero-cache",
-    "@janbaykara/zotero-chrome": "file:../zotero-syllabus/packages/zotero-chrome",
-    "@janbaykara/zotero-jotai-state": "file:../zotero-syllabus/packages/zotero-jotai-state",
-    "@janbaykara/zotero-preact": "file:../zotero-syllabus/packages/zotero-preact",
-    "@janbaykara/zotero-tailwind-theme": "file:../zotero-syllabus/packages/zotero-tailwind-theme",
+    "@janbaykara/zotero-cache": "file:packages/zotero-cache",
+    "@janbaykara/zotero-chrome": "file:packages/zotero-chrome",
+    "@janbaykara/zotero-jotai-state": "file:packages/zotero-jotai-state",
+    "@janbaykara/zotero-preact": "file:packages/zotero-preact",
+    "@janbaykara/zotero-tailwind-theme": "file:packages/zotero-tailwind-theme",
     "jotai": "^3.0.1",
     "jotai-family": "^1.1.0",
     "lru-cache": "^11.5.2",
     "preact": "^10.29.8",
     "verzod": "^0.5.1",
     "zod": "^3.25.76",
-    "zotero-plugin-toolkit": "^5.1.0-beta.13"
+    "zotero-plugin-toolkit": "5.1.0-beta.13"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.11",
@@ -59,10 +59,10 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "zotero-plugin-scaffold": "^0.8.2",
-    "zotero-types": "^4.1.0-beta.4"
+    "zotero-types": "4.1.0-beta.4"
   },
   "overrides": {
-    "@janbaykara/zotero-jotai-state": "file:../zotero-syllabus/packages/zotero-jotai-state"
+    "@janbaykara/zotero-jotai-state": "file:packages/zotero-jotai-state"
   },
   "prettier": {
     "printWidth": 80,

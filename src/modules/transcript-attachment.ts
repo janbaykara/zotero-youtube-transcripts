@@ -113,7 +113,7 @@ export async function repairTranscriptAnnotationPositions(
     return;
   }
 
-  let annotations: Zotero.Item[] = [];
+  let annotations: Zotero.Item[];
   try {
     annotations = attachment.getAnnotations?.(false) || [];
   } catch {

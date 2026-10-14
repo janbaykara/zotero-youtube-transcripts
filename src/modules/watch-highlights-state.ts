@@ -49,7 +49,7 @@ function readHighlights(attachmentID: number): TranscriptHighlight[] {
     return [];
   }
 
-  let annotations: Zotero.Item[] = [];
+  let annotations: Zotero.Item[];
   try {
     annotations = attachment.getAnnotations?.(false) || [];
   } catch {
@@ -121,8 +121,7 @@ function isRelevantAttachmentEvent(
 
   for (const id of numericIds) {
     const extra = extraData?.[id] as
-      | { parentID?: number; parentItemID?: number }
-      | undefined;
+      { parentID?: number; parentItemID?: number } | undefined;
     if (
       extra?.parentID === attachmentID ||
       extra?.parentItemID === attachmentID

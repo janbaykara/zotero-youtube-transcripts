@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const preactRoot = dirname(require.resolve("preact/package.json"));
 
 /**
- * file: deps under zotero-syllabus bring their own nested `preact`, which
+ * file: deps under packages/ bring their own nested `preact`, which
  * duplicates hooks state (`__H` undefined). Pin every Preact import here.
  */
 const preactAliases = {
