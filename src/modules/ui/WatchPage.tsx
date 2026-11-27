@@ -23,6 +23,12 @@ import {
   getCachedRegularItem,
 } from "../transcript-attachment";
 import {
+  clampMatchIndex,
+  findTranscriptMatches,
+  nextMatchIndex,
+  prevMatchIndex,
+} from "../transcript-find";
+import {
   invalidateAttachmentHighlights,
   setWatchTranscriptBlocks,
   useAttachmentHighlights,
@@ -41,6 +47,7 @@ import { watchTabId } from "../watch-tab";
 import { subscribeWatchSeek, takePendingWatchSeek } from "../watch-seek";
 import { DisplaySettingsPopover } from "./DisplaySettingsPopover";
 import { HighlightPopover } from "./HighlightPopover";
+import { TranscriptFindBar } from "./TranscriptFindBar";
 import { TranscriptPane } from "./TranscriptPane";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
 
@@ -61,6 +68,10 @@ export function WatchPage({ itemID }: WatchPageProps) {
   const [splitRatio, setSplitRatio] = useWatchSplitRatio();
   const display = useWatchDisplaySettings();
   const [displayOpen, setDisplayOpen] = useState(false);
+  const [findOpen, setFindOpen] = useState(false);
+  const [findQuery, setFindQuery] = useState("");
+  const [matchIndex, setMatchIndex] = useState(0);
+  const [findFocusToken, setFindFocusToken] = useState(0);
   /**
    * Sticky create session: survives live-selection collapse between pointerup
    * and colour pick so multi-line ranges are not lost.
@@ -134,6 +145,92 @@ export function WatchPage({ itemID }: WatchPageProps) {
   }, [attachmentID, blocks]);
 
   const highlights = useAttachmentHighlights(attachmentID);
+
+  const findMatches = useMemo(
+    () => (findOpen ? findTranscriptMatches(blocks, findQuery) : []),
+    [findOpen, blocks, findQuery],
+  );
+
+  useEffect(() => {
+    setMatchIndex((prev) => clampMatchIndex(prev, findMatches.length));
+  }, [findMatches]);
+
+  const openFind = useCallback(() => {
+    setFindOpen(true);
+    setFindFocusToken((n) => n + 1);
+  }, []);
+
+  const closeFind = useCallback(() => {
+    setFindOpen(false);
+    setFindQuery("");
+    setMatchIndex(0);
+  }, []);
+
+  const goNextMatch = useCallback(() => {
+    setMatchIndex((prev) => nextMatchIndex(prev, findMatches.length));
+  }, [findMatches.length]);
+
+  const goPrevMatch = useCallback(() => {
+    setMatchIndex((prev) => prevMatchIndex(prev, findMatches.length));
+  }, [findMatches.length]);
+
+  // Cmd/Ctrl-F find bar (document capture so the YouTube player cannot steal it).
+  useEffect(() => {
+    if (status !== "ready") return;
+    const root = rootRef.current;
+    if (!root) return;
+    const doc = root.ownerDocument;
+    const tabId = watchTabId(itemID);
+
+    const isThisTabSelected = () => {
+      try {
+        const win = Zotero.getMainWindow();
+        const selected = (
+          win?.Zotero_Tabs as unknown as { selectedID?: string } | undefined
+        )?.selectedID;
+        return selected === tabId;
+      } catch {
+        return true;
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isThisTabSelected()) return;
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && (event.key === "f" || event.key === "F")) {
+        event.preventDefault();
+        event.stopPropagation();
+        openFind();
+        return;
+      }
+      if (!findOpen) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeFind();
+        return;
+      }
+      if (event.key === "F3") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.shiftKey) goPrevMatch();
+        else goNextMatch();
+      }
+    };
+
+    doc.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      doc.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, [
+    status,
+    itemID,
+    findOpen,
+    openFind,
+    closeFind,
+    goNextMatch,
+    goPrevMatch,
+  ]);
 
   const onTimeUpdate = useCallback((seconds: number) => {
     const ms = Math.max(0, seconds * 1000);
@@ -601,12 +698,30 @@ export function WatchPage({ itemID }: WatchPageProps) {
             onPick={(color) => void onHighlightColor(color)}
           />
         ) : null}
+        {findOpen ? (
+          <TranscriptFindBar
+            query={findQuery}
+            matchIndex={matchIndex}
+            matchCount={findMatches.length}
+            focusToken={findFocusToken}
+            onQueryChange={(query) => {
+              setFindQuery(query);
+              setMatchIndex(0);
+            }}
+            onPrev={goPrevMatch}
+            onNext={goNextMatch}
+            onClose={closeFind}
+          />
+        ) : null}
         <TranscriptPane
           blocks={blocks}
           currentTimeMs={currentTimeMs}
           autoscroll={autoscroll}
           jumpToken={jumpToken}
           highlights={highlights}
+          findMatches={findMatches}
+          activeMatchIndex={matchIndex}
+          findActive={findOpen && findMatches.length > 0}
           onSeek={onSeek}
           onSelectionAnchor={onSelectionAnchorChange}
           onMarkClick={onMarkClick}

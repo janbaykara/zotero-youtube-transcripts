@@ -16,6 +16,7 @@ import {
   type TranscriptHighlight,
   type TranscriptSelectionRange,
 } from "../transcript-annotations";
+import type { TranscriptFindMatch } from "../transcript-find";
 
 export type SelectionPublish = {
   anchor: SelectionAnchor | null;
@@ -35,6 +36,10 @@ interface TranscriptPaneProps {
   autoscroll: boolean;
   jumpToken: number;
   highlights: TranscriptHighlight[];
+  findMatches?: TranscriptFindMatch[];
+  activeMatchIndex?: number;
+  /** When true, skip player-driven autoscroll so find can own the viewport. */
+  findActive?: boolean;
   onSeek: (offsetMs: number) => void;
   onSelectionAnchor: (publish: SelectionPublish) => void;
   onMarkClick: (
@@ -42,6 +47,8 @@ interface TranscriptPaneProps {
     anchor: SelectionAnchor,
   ) => void;
 }
+
+type LineFindHit = TranscriptFindMatch & { matchIndex: number };
 
 function highlightsForLine(
   highlights: TranscriptHighlight[],
@@ -56,21 +63,46 @@ function marksWithComments(
   return marks.filter((m) => !!m.comment?.trim());
 }
 
-/** Render caption text with annotation <mark> spans. */
+function wrapFindMark(
+  slice: string,
+  findHit: LineFindHit | undefined,
+  activeMatchIndex: number,
+  key: string,
+): ComponentChildren {
+  if (!findHit) return slice;
+  const current = findHit.matchIndex === activeMatchIndex;
+  return (
+    <mark
+      key={key}
+      className={`yt-watch-find-match${current ? " current" : ""}`}
+      data-find-match={String(findHit.matchIndex)}
+    >
+      {slice}
+    </mark>
+  );
+}
+
+/** Render caption text with annotation and find <mark> spans. */
 function renderHighlightedText(
   text: string,
   marks: TranscriptHighlight[],
+  findHits: LineFindHit[],
+  activeMatchIndex: number,
   onMarkClick: (
     highlight: TranscriptHighlight,
     anchor: SelectionAnchor,
   ) => void,
 ): ComponentChildren {
-  if (marks.length === 0) return text;
+  if (marks.length === 0 && findHits.length === 0) return text;
 
   const points = new Set<number>([0, text.length]);
   for (const mark of marks) {
     points.add(Math.max(0, Math.min(text.length, mark.start)));
     points.add(Math.max(0, Math.min(text.length, mark.end)));
+  }
+  for (const hit of findHits) {
+    points.add(Math.max(0, Math.min(text.length, hit.start)));
+    points.add(Math.max(0, Math.min(text.length, hit.end)));
   }
   const edges = [...points].sort((a, b) => a - b);
   const nodes: ComponentChildren[] = [];
@@ -81,8 +113,15 @@ function renderHighlightedText(
     if (end <= start) continue;
     const slice = text.slice(start, end);
     const covering = marks.filter((m) => m.start <= start && m.end >= end);
+    const findHit = findHits.find((h) => h.start <= start && h.end >= end);
+    const findKey = `find-${start}-${end}`;
+
     if (covering.length === 0) {
-      nodes.push(slice);
+      nodes.push(
+        findHit
+          ? wrapFindMark(slice, findHit, activeMatchIndex, findKey)
+          : slice,
+      );
       continue;
     }
     const top = covering[covering.length - 1];
@@ -111,7 +150,7 @@ function renderHighlightedText(
           });
         }}
       >
-        {slice}
+        {wrapFindMark(slice, findHit, activeMatchIndex, findKey)}
       </mark>,
     );
   }
@@ -122,12 +161,32 @@ function markBackground(color: string): string {
   return `color-mix(in srgb, ${color} 55%, transparent)`;
 }
 
+function scrollPaneToElement(
+  pane: HTMLElement,
+  el: HTMLElement,
+  behavior: ScrollBehavior = "smooth",
+) {
+  const paneRect = pane.getBoundingClientRect();
+  const elRect = el.getBoundingClientRect();
+  const offset =
+    elRect.top - paneRect.top - paneRect.height / 2 + elRect.height / 2;
+  const target = pane.scrollTop + offset;
+  try {
+    pane.scrollTo({ top: Math.max(0, target), behavior });
+  } catch {
+    pane.scrollTop = Math.max(0, target);
+  }
+}
+
 export function TranscriptPane({
   blocks,
   currentTimeMs,
   autoscroll,
   jumpToken,
   highlights,
+  findMatches = [],
+  activeMatchIndex = -1,
+  findActive = false,
   onSeek,
   onSelectionAnchor,
   onMarkClick,
@@ -136,6 +195,7 @@ export function TranscriptPane({
   const listRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
   const lastScrolledIndex = useRef<number>(-1);
+  const lastFindScrollIndex = useRef<number>(-1);
   const pointerDownRef = useRef(false);
   const dragStartCaretRef = useRef<{
     lineOffsetMs: number;
@@ -143,6 +203,7 @@ export function TranscriptPane({
   } | null>(null);
 
   useEffect(() => {
+    if (findActive) return;
     if (activeIndex < 0) return;
     if (!autoscroll && jumpToken === 0) return;
     if (
@@ -158,19 +219,25 @@ export function TranscriptPane({
     if (!pane || !el) return;
 
     lastScrolledIndex.current = activeIndex;
+    scrollPaneToElement(pane, el);
+  }, [activeIndex, autoscroll, jumpToken, findActive]);
 
-    const paneRect = pane.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const offset =
-      elRect.top - paneRect.top - paneRect.height / 2 + elRect.height / 2;
-    const target = pane.scrollTop + offset;
+  useEffect(() => {
+    lastFindScrollIndex.current = -1;
+  }, [findMatches]);
 
-    try {
-      pane.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
-    } catch {
-      pane.scrollTop = Math.max(0, target);
-    }
-  }, [activeIndex, autoscroll, jumpToken]);
+  useEffect(() => {
+    if (!findActive || activeMatchIndex < 0) return;
+    if (activeMatchIndex === lastFindScrollIndex.current) return;
+    const pane = listRef.current;
+    if (!pane) return;
+    const el = pane.querySelector(
+      `[data-find-match="${activeMatchIndex}"]`,
+    ) as HTMLElement | null;
+    if (!el) return;
+    lastFindScrollIndex.current = activeMatchIndex;
+    scrollPaneToElement(pane, el);
+  }, [findActive, activeMatchIndex, findMatches]);
 
   useEffect(() => {
     if (jumpToken > 0) {
@@ -236,7 +303,8 @@ export function TranscriptPane({
     const onPointerDown = (event: PointerEvent) => {
       if (
         closestIn(event.target, ".yt-watch-highlight-popover") ||
-        closestIn(event.target, ".yt-watch-display-popover")
+        closestIn(event.target, ".yt-watch-display-popover") ||
+        closestIn(event.target, ".yt-watch-find-bar")
       ) {
         return;
       }
@@ -274,6 +342,7 @@ export function TranscriptPane({
         dragStartCaretRef.current &&
         !closestIn(event.target, ".yt-watch-highlight-popover") &&
         !closestIn(event.target, ".yt-watch-display-popover") &&
+        !closestIn(event.target, ".yt-watch-find-bar") &&
         !closestIn(event.target, ".yt-watch-line-time")
       ) {
         finalizeCreateSession(event.clientX, event.clientY);
@@ -321,6 +390,13 @@ export function TranscriptPane({
               highlights,
               block.quoteTimeOffset,
             );
+            const lineFindHits: LineFindHit[] = [];
+            for (let mi = 0; mi < findMatches.length; mi++) {
+              const match = findMatches[mi];
+              if (match.blockIndex === index) {
+                lineFindHits.push({ ...match, matchIndex: mi });
+              }
+            }
             const commentedMarks = marksWithComments(lineMarks);
             const timeLabel = formatTimestamp(block.quoteTimeOffset);
             const anchorId = transcriptLineAnchorId(block.quoteTimeOffset);
@@ -342,7 +418,13 @@ export function TranscriptPane({
                     className="yt-watch-line-text"
                     data-line-offset={block.quoteTimeOffset}
                   >
-                    {renderHighlightedText(text, lineMarks, onMarkClick)}
+                    {renderHighlightedText(
+                      text,
+                      lineMarks,
+                      lineFindHits,
+                      activeMatchIndex,
+                      onMarkClick,
+                    )}
                   </span>
                   <button
                     type="button"

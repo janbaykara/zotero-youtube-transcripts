@@ -166,6 +166,114 @@ tab-content[id^="yt-watch-"],
   opacity: 1;
 }
 
+/* —— Find bar (Cmd/Ctrl-F) —— */
+.yt-watch-find-bar {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: calc(100% - 10rem);
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
+  border-radius: 6px;
+  background: color-mix(
+    in srgb,
+    var(--material-background, Canvas) 94%,
+    transparent
+  );
+  box-shadow: var(
+    --box-shadow-level-2,
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08)
+  );
+  backdrop-filter: blur(8px);
+  color: var(--fill-primary, CanvasText);
+}
+
+.yt-watch-find-input {
+  appearance: none;
+  box-sizing: border-box;
+  width: 11rem;
+  min-width: 6rem;
+  max-width: 40vw;
+  margin: 0;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
+  border-radius: 4px;
+  background: var(--material-background, Canvas);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.yt-watch-find-input:focus {
+  outline: 2px solid color-mix(in srgb, AccentColor 55%, transparent);
+  outline-offset: 0;
+}
+
+.yt-watch-find-status {
+  flex: 0 0 auto;
+  min-width: 4.5rem;
+  padding: 0 0.15rem;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--fill-secondary, #888);
+  white-space: nowrap;
+}
+
+.yt-watch-find-nav,
+.yt-watch-find-close {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.55rem;
+  height: 1.55rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
+  border-radius: 4px;
+  background: var(--material-background, Canvas);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.yt-watch-find-nav:hover:not(:disabled),
+.yt-watch-find-close:hover {
+  background: color-mix(
+    in srgb,
+    var(--fill-secondary, #888) 12%,
+    var(--material-background, Canvas)
+  );
+}
+
+.yt-watch-find-nav:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.yt-watch-find-match {
+  color: inherit;
+  background: color-mix(in srgb, #e6c200 45%, transparent);
+  border-radius: 2px;
+  padding: 0 0.02em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.yt-watch-find-match.current {
+  background: color-mix(in srgb, #ff9800 62%, transparent);
+  outline: 1px solid color-mix(in srgb, #c26a00 70%, transparent);
+}
+
 .yt-watch-float-controls {
   position: absolute;
   top: 0.65rem;
