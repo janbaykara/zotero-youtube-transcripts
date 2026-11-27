@@ -7,3 +7,5 @@ pref("watchSplitPercent", 50);
 pref("watchFont", "serif");
 pref("watchFontSize", 3);
 pref("watchLineSpacing", 2);
+pref("watchTheme", "light");
+pref("watchTextWidth", 2);

@@ -16,6 +16,8 @@ declare namespace _ZoteroTypes {
       "watchFont": string;
       "watchFontSize": number;
       "watchLineSpacing": number;
+      "watchTheme": string;
+      "watchTextWidth": number;
     };
   }
 }

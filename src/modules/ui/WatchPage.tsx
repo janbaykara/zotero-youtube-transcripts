@@ -615,7 +615,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
   }, [itemID]);
 
   return (
-    <div ref={rootRef} className="yt-watch-root">
+    <div ref={rootRef} className={`yt-watch-root theme-${display.theme}`}>
       <div
         className="yt-watch-player-pane"
         style={{ flex: `0 0 ${playerFlex}` }}
@@ -648,20 +648,11 @@ export function WatchPage({ itemID }: WatchPageProps) {
                 : '"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif',
             "--yt-watch-font-size": `${display.fontSizePx}px`,
             "--yt-watch-line-height": String(display.lineHeight),
+            "--yt-watch-text-width": `${display.textWidthRem}rem`,
           } as Record<string, string>
         }
       >
         <div className="yt-watch-float-controls">
-          <button
-            type="button"
-            className={`yt-watch-tool-btn${displayOpen ? " active" : ""}`}
-            aria-expanded={displayOpen}
-            aria-haspopup="dialog"
-            onClick={() => setDisplayOpen((open) => !open)}
-          >
-            <img src={iconDisplay} alt="" width={14} height={14} />
-            <span>{getString("watch-display")}</span>
-          </button>
           <button
             type="button"
             className="yt-watch-tool-btn"
@@ -686,14 +677,29 @@ export function WatchPage({ itemID }: WatchPageProps) {
             <img src={iconOpen} alt="" width={14} height={14} />
             <span>{getString("watch-open-reader")}</span>
           </button>
+          <button
+            type="button"
+            className={`yt-watch-tool-btn${displayOpen ? " active" : ""}`}
+            aria-expanded={displayOpen}
+            aria-haspopup="dialog"
+            onClick={() => setDisplayOpen((open) => !open)}
+          >
+            <img src={iconDisplay} alt="" width={14} height={14} />
+            <span>{getString("watch-display")}</span>
+          </button>
           {displayOpen ? (
             <DisplaySettingsPopover
               font={display.font}
               fontSizeIndex={display.fontSizeIndex}
               lineSpacingIndex={display.lineSpacingIndex}
+              textWidthIndex={display.textWidthIndex}
+              textWidthId={display.textWidthId}
+              theme={display.theme}
               onFont={display.setFont}
               onFontSizeIndex={display.setFontSizeIndex}
               onLineSpacingIndex={display.setLineSpacingIndex}
+              onTextWidthIndex={display.setTextWidthIndex}
+              onTheme={display.setTheme}
               onClear={display.clear}
               onClose={() => setDisplayOpen(false)}
             />

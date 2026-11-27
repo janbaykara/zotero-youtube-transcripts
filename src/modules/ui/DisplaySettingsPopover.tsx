@@ -1,21 +1,68 @@
 import { useEffect, useRef } from "preact/hooks";
 
 import { getString } from "../../utils/locale";
-import type { WatchFont } from "../watch-prefs";
+import type {
+  WatchFont,
+  WatchTextWidthId,
+  WatchTheme,
+} from "../watch-prefs";
 import {
   WATCH_FONT_SIZE_STEPS,
   WATCH_LINE_SPACING_STEPS,
+  WATCH_TEXT_WIDTH_STEPS,
 } from "../watch-prefs";
 
 export interface DisplaySettingsPopoverProps {
   font: WatchFont;
   fontSizeIndex: number;
   lineSpacingIndex: number;
+  textWidthIndex: number;
+  textWidthId: WatchTextWidthId;
+  theme: WatchTheme;
   onFont: (font: WatchFont) => void;
   onFontSizeIndex: (index: number) => void;
   onLineSpacingIndex: (index: number) => void;
+  onTextWidthIndex: (index: number) => void;
+  onTheme: (theme: WatchTheme) => void;
   onClear: () => void;
   onClose: () => void;
+}
+
+function textWidthLabel(id: WatchTextWidthId): string {
+  switch (id) {
+    case "narrow":
+      return getString("watch-display-width-narrow");
+    case "medium":
+      return getString("watch-display-width-medium");
+    case "wide":
+      return getString("watch-display-width-wide");
+    case "x-large":
+      return getString("watch-display-width-x-large");
+  }
+}
+
+function TextWidthIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      aria-hidden="true"
+      className="yt-watch-display-width-icon"
+    >
+      <rect x="3" y="3.5" width="12" height="1.6" rx="0.7" fill="currentColor" />
+      <rect x="4.5" y="7" width="9" height="1.6" rx="0.7" fill="currentColor" />
+      <rect x="3.5" y="10.5" width="11" height="1.6" rx="0.7" fill="currentColor" />
+      <path
+        d="M4 14.75h10M4 14.75l1.4-1.3M4 14.75l1.4 1.3M14 14.75l-1.4-1.3M14 14.75l-1.4 1.3"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
 }
 
 function LineSpacingIcon({ density }: { density: number }) {
@@ -49,9 +96,14 @@ export function DisplaySettingsPopover({
   font,
   fontSizeIndex,
   lineSpacingIndex,
+  textWidthIndex,
+  textWidthId,
+  theme,
   onFont,
   onFontSizeIndex,
   onLineSpacingIndex,
+  onTextWidthIndex,
+  onTheme,
   onClear,
   onClose,
 }: DisplaySettingsPopoverProps) {
@@ -85,6 +137,7 @@ export function DisplaySettingsPopover({
   }, [onClose]);
 
   const sizeMax = WATCH_FONT_SIZE_STEPS.length - 1;
+  const widthMax = WATCH_TEXT_WIDTH_STEPS.length - 1;
 
   return (
     <div
@@ -104,6 +157,38 @@ export function DisplaySettingsPopover({
         >
           {getString("watch-display-clear")}
         </button>
+      </div>
+
+      <div
+        className="yt-watch-display-theme"
+        role="radiogroup"
+        aria-label={getString("watch-display-theme")}
+      >
+        {(
+          [
+            ["light", "watch-display-theme-light"],
+            ["sepia", "watch-display-theme-sepia"],
+            ["dark", "watch-display-theme-dark"],
+          ] as const
+        ).map(([id, labelKey]) => (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-checked={theme === id}
+            className={`yt-watch-display-theme-card theme-${id}${
+              theme === id ? " selected" : ""
+            }`}
+            onClick={() => onTheme(id)}
+          >
+            <span className="yt-watch-display-theme-sample" aria-hidden="true">
+              Aa
+            </span>
+            <span className="yt-watch-display-theme-label">
+              {getString(labelKey)}
+            </span>
+          </button>
+        ))}
       </div>
 
       <div className="yt-watch-display-fonts" role="radiogroup">
@@ -183,6 +268,36 @@ export function DisplaySettingsPopover({
             <LineSpacingIcon density={i} />
           </button>
         ))}
+      </div>
+
+      <div className="yt-watch-display-width">
+        <span className="yt-watch-display-width-label">
+          <TextWidthIcon />
+          <span>{getString("watch-display-width")}</span>
+        </span>
+        <span className="yt-watch-display-width-value">
+          {textWidthLabel(textWidthId)}
+        </span>
+        <div className="yt-watch-display-width-stepper">
+          <button
+            type="button"
+            className="yt-watch-display-width-step"
+            aria-label={getString("watch-display-width-narrower")}
+            disabled={textWidthIndex <= 0}
+            onClick={() => onTextWidthIndex(textWidthIndex - 1)}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            className="yt-watch-display-width-step"
+            aria-label={getString("watch-display-width-wider")}
+            disabled={textWidthIndex >= widthMax}
+            onClick={() => onTextWidthIndex(textWidthIndex + 1)}
+          >
+            +
+          </button>
+        </div>
       </div>
     </div>
   );
