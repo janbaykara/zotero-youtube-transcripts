@@ -274,6 +274,17 @@ tab-content[id^="yt-watch-"],
   outline: 1px solid color-mix(in srgb, #c26a00 70%, transparent);
 }
 
+/* Stand-in for OS selection after we clear the native Selection (hang guard). */
+.yt-watch-pending-selection {
+  color: HighlightText;
+  background: Highlight;
+  border-radius: 0;
+  padding: 0;
+  pointer-events: none;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
 .yt-watch-float-controls {
   position: absolute;
   top: 0.65rem;

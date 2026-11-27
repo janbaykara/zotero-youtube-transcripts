@@ -719,6 +719,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
           autoscroll={autoscroll}
           jumpToken={jumpToken}
           highlights={highlights}
+          pendingRanges={createSession?.ranges ?? []}
           findMatches={findMatches}
           activeMatchIndex={matchIndex}
           findActive={findOpen && findMatches.length > 0}

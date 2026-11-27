@@ -36,6 +36,8 @@ interface TranscriptPaneProps {
   autoscroll: boolean;
   jumpToken: number;
   highlights: TranscriptHighlight[];
+  /** Frozen create-session ranges — painted after native selection is cleared. */
+  pendingRanges?: TranscriptSelectionRange[];
   findMatches?: TranscriptFindMatch[];
   activeMatchIndex?: number;
   /** When true, skip player-driven autoscroll so find can own the viewport. */
@@ -50,6 +52,11 @@ interface TranscriptPaneProps {
 
 type LineFindHit = TranscriptFindMatch & { matchIndex: number };
 
+type LinePendingHit = {
+  start: number;
+  end: number;
+};
+
 function highlightsForLine(
   highlights: TranscriptHighlight[],
   lineOffsetMs: number,
@@ -63,37 +70,57 @@ function marksWithComments(
   return marks.filter((m) => !!m.comment?.trim());
 }
 
-function wrapFindMark(
+/** Nested decorative marks (find + pending selection) around a text slice. */
+function wrapDecorativeMarks(
   slice: string,
   findHit: LineFindHit | undefined,
+  pending: boolean,
   activeMatchIndex: number,
-  key: string,
+  keyBase: string,
 ): ComponentChildren {
-  if (!findHit) return slice;
-  const current = findHit.matchIndex === activeMatchIndex;
-  return (
-    <mark
-      key={key}
-      className={`yt-watch-find-match${current ? " current" : ""}`}
-      data-find-match={String(findHit.matchIndex)}
-    >
-      {slice}
-    </mark>
-  );
+  if (!findHit && !pending) return slice;
+
+  let content: ComponentChildren = slice;
+  if (findHit) {
+    content = (
+      <mark
+        className={`yt-watch-find-match${
+          findHit.matchIndex === activeMatchIndex ? " current" : ""
+        }`}
+        data-find-match={String(findHit.matchIndex)}
+      >
+        {content}
+      </mark>
+    );
+  }
+  if (pending) {
+    content = (
+      <mark className="yt-watch-pending-selection">{content}</mark>
+    );
+  }
+  // Stable key for top-level segment lists.
+  return <span key={keyBase}>{content}</span>;
 }
 
-/** Render caption text with annotation and find <mark> spans. */
+/** Render caption text with annotation, find, and pending-selection marks. */
 function renderHighlightedText(
   text: string,
   marks: TranscriptHighlight[],
   findHits: LineFindHit[],
+  pendingHits: LinePendingHit[],
   activeMatchIndex: number,
   onMarkClick: (
     highlight: TranscriptHighlight,
     anchor: SelectionAnchor,
   ) => void,
 ): ComponentChildren {
-  if (marks.length === 0 && findHits.length === 0) return text;
+  if (
+    marks.length === 0 &&
+    findHits.length === 0 &&
+    pendingHits.length === 0
+  ) {
+    return text;
+  }
 
   const points = new Set<number>([0, text.length]);
   for (const mark of marks) {
@@ -101,6 +128,10 @@ function renderHighlightedText(
     points.add(Math.max(0, Math.min(text.length, mark.end)));
   }
   for (const hit of findHits) {
+    points.add(Math.max(0, Math.min(text.length, hit.start)));
+    points.add(Math.max(0, Math.min(text.length, hit.end)));
+  }
+  for (const hit of pendingHits) {
     points.add(Math.max(0, Math.min(text.length, hit.start)));
     points.add(Math.max(0, Math.min(text.length, hit.end)));
   }
@@ -114,13 +145,18 @@ function renderHighlightedText(
     const slice = text.slice(start, end);
     const covering = marks.filter((m) => m.start <= start && m.end >= end);
     const findHit = findHits.find((h) => h.start <= start && h.end >= end);
-    const findKey = `find-${start}-${end}`;
+    const pending = pendingHits.some((h) => h.start <= start && h.end >= end);
+    const keyBase = `seg-${start}-${end}`;
 
     if (covering.length === 0) {
       nodes.push(
-        findHit
-          ? wrapFindMark(slice, findHit, activeMatchIndex, findKey)
-          : slice,
+        wrapDecorativeMarks(
+          slice,
+          findHit,
+          pending,
+          activeMatchIndex,
+          keyBase,
+        ),
       );
       continue;
     }
@@ -150,7 +186,13 @@ function renderHighlightedText(
           });
         }}
       >
-        {wrapFindMark(slice, findHit, activeMatchIndex, findKey)}
+        {wrapDecorativeMarks(
+          slice,
+          findHit,
+          pending,
+          activeMatchIndex,
+          keyBase,
+        )}
       </mark>,
     );
   }
@@ -184,6 +226,7 @@ export function TranscriptPane({
   autoscroll,
   jumpToken,
   highlights,
+  pendingRanges = [],
   findMatches = [],
   activeMatchIndex = -1,
   findActive = false,
@@ -263,10 +306,9 @@ export function TranscriptPane({
 
     /**
      * Finalize a create session once on pointerup.
-     * Important: clear the native selection *before* setState. Otherwise the
-     * popover mount re-renders caption text nodes under an active Selection,
-     * which fires selectionchange → another publish → render loop / hang
-     * (especially on the first selection after launch).
+     * Clear the native selection *before* setState so popover mount does not
+     * re-render caption nodes under an active Selection (hang risk). Pending
+     * ranges are painted as `.yt-watch-pending-selection` instead.
      */
     const finalizeCreateSession = (clientX: number, clientY: number) => {
       const start = dragStartCaretRef.current;
@@ -289,15 +331,7 @@ export function TranscriptPane({
       const nativeAnchor = selectionAnchorInTranscript(pane);
       const anchor = nativeAnchor ?? { clientX: clientX + 8, clientY };
       clearNativeSelection();
-      // Defer popover mount until after selection teardown settles.
-      const win = pane.ownerDocument.defaultView;
-      if (win) {
-        win.setTimeout(() => {
-          onSelectionAnchor({ anchor, ranges });
-        }, 0);
-      } else {
-        onSelectionAnchor({ anchor, ranges });
-      }
+      onSelectionAnchor({ anchor, ranges });
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -397,6 +431,9 @@ export function TranscriptPane({
                 lineFindHits.push({ ...match, matchIndex: mi });
               }
             }
+            const linePendingHits: LinePendingHit[] = pendingRanges
+              .filter((r) => r.lineOffsetMs === block.quoteTimeOffset)
+              .map((r) => ({ start: r.start, end: r.end }));
             const commentedMarks = marksWithComments(lineMarks);
             const timeLabel = formatTimestamp(block.quoteTimeOffset);
             const anchorId = transcriptLineAnchorId(block.quoteTimeOffset);
@@ -422,6 +459,7 @@ export function TranscriptPane({
                       text,
                       lineMarks,
                       lineFindHits,
+                      linePendingHits,
                       activeMatchIndex,
                       onMarkClick,
                     )}
