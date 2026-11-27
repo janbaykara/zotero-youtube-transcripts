@@ -170,8 +170,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
     () => supportsParagraphMode(blocks),
     [blocks],
   );
-  const paragraphMode =
-    display.paragraphMode && paragraphModeAvailable;
+  const paragraphMode = display.paragraphMode && paragraphModeAvailable;
 
   useEffect(() => {
     setMatchIndex((prev) => clampMatchIndex(prev, findMatches.length));
