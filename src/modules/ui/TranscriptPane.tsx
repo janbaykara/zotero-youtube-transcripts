@@ -573,7 +573,6 @@ export function TranscriptPane({
                     }`}
                     data-line-offset={block.quoteTimeOffset}
                     onClick={(event) => {
-                      if (!paragraphMode) return;
                       const target = event.target as
                         | (EventTarget & {
                             closest?: (s: string) => Element | null;

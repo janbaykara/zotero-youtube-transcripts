@@ -36,6 +36,7 @@ watch-display-width-xx-large = 超宽
 watch-display-width-narrower = 更窄
 watch-display-width-wider = 更宽
 watch-display-paragraph = 段落模式
+watch-display-paragraph-unavailable = 段落模式需要字幕中有句号等标点
 watch-highlight = 高亮
 watch-highlight-tip = 选中字幕文字后选择颜色，将写入 HTML 附件批注
 watch-highlight-comment-placeholder = 添加批注

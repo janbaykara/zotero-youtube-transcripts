@@ -36,6 +36,7 @@ watch-display-width-xx-large = XX-Large
 watch-display-width-narrower = Narrower
 watch-display-width-wider = Wider
 watch-display-paragraph = Paragraph mode
+watch-display-paragraph-unavailable = Paragraph mode needs sentence punctuation in the transcript
 watch-highlight = Highlight
 watch-highlight-tip = Select transcript text, then pick a colour to annotate the HTML attachment
 watch-highlight-comment-placeholder = Add comment

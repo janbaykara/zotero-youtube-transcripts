@@ -1319,7 +1319,7 @@ button.yt-watch-color-swatch:disabled {
   color: color-mix(in srgb, var(--fill-primary, CanvasText) 78%, transparent);
   user-select: text;
   -moz-user-select: text;
-  cursor: text;
+  cursor: pointer;
 }
 
 .yt-watch-line.active .yt-watch-line-text,

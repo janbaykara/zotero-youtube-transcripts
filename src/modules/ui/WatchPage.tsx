@@ -8,6 +8,7 @@ import {
 import { chromeSkinUrl } from "@janbaykara/zotero-chrome";
 
 import type { EmbeddedTranscriptData } from "../../transcript/embedded-data";
+import { supportsParagraphMode } from "../../transcript/paragraph-breaks";
 import { getString } from "../../utils/locale";
 import {
   createTranscriptHighlights,
@@ -163,6 +164,14 @@ export function WatchPage({ itemID }: WatchPageProps) {
     () => (findOpen ? findTranscriptMatches(blocks, findQuery) : []),
     [findOpen, blocks, findQuery],
   );
+
+  /** Unpunctuated auto-captions can't place sentence breaks — stay line mode. */
+  const paragraphModeAvailable = useMemo(
+    () => supportsParagraphMode(blocks),
+    [blocks],
+  );
+  const paragraphMode =
+    display.paragraphMode && paragraphModeAvailable;
 
   useEffect(() => {
     setMatchIndex((prev) => clampMatchIndex(prev, findMatches.length));
@@ -720,7 +729,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
       <div
         ref={transcriptSectionRef}
         className={`yt-watch-transcript-section text-width-${display.textWidthId}${
-          display.paragraphMode ? " paragraph-mode" : ""
+          paragraphMode ? " paragraph-mode" : ""
         }`}
         style={
           {
@@ -777,7 +786,8 @@ export function WatchPage({ itemID }: WatchPageProps) {
               textWidthIndex={display.textWidthIndex}
               textWidthId={display.textWidthId}
               theme={display.theme}
-              paragraphMode={display.paragraphMode}
+              paragraphMode={paragraphMode}
+              paragraphModeAvailable={paragraphModeAvailable}
               onFont={display.setFont}
               onFontSizeIndex={display.setFontSizeIndex}
               onLineSpacingIndex={display.setLineSpacingIndex}
@@ -886,7 +896,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
           autoscroll={autoscroll}
           jumpToken={jumpToken}
           highlights={highlights}
-          paragraphMode={display.paragraphMode}
+          paragraphMode={paragraphMode}
           pendingRanges={createSession?.ranges ?? []}
           findMatches={findMatches}
           activeMatchIndex={matchIndex}

@@ -16,6 +16,8 @@ export interface DisplaySettingsPopoverProps {
   textWidthId: WatchTextWidthId;
   theme: WatchTheme;
   paragraphMode: boolean;
+  /** False when the transcript lacks usable sentence punctuation. */
+  paragraphModeAvailable?: boolean;
   onFont: (font: WatchFont) => void;
   onFontSizeIndex: (index: number) => void;
   onLineSpacingIndex: (index: number) => void;
@@ -114,6 +116,7 @@ export function DisplaySettingsPopover({
   textWidthId,
   theme,
   paragraphMode,
+  paragraphModeAvailable = true,
   onFont,
   onFontSizeIndex,
   onLineSpacingIndex,
@@ -316,10 +319,18 @@ export function DisplaySettingsPopover({
         </div>
       </div>
 
-      <label className="yt-watch-display-paragraph">
+      <label
+        className="yt-watch-display-paragraph"
+        title={
+          paragraphModeAvailable
+            ? undefined
+            : getString("watch-display-paragraph-unavailable")
+        }
+      >
         <input
           type="checkbox"
           checked={paragraphMode}
+          disabled={!paragraphModeAvailable}
           onChange={(event) =>
             onParagraphMode((event.currentTarget as HTMLInputElement).checked)
           }

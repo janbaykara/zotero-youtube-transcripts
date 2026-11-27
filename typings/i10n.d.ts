@@ -30,6 +30,7 @@ export type FluentMessageId =
   | 'watch-display-font-sans'
   | 'watch-display-font-serif'
   | 'watch-display-paragraph'
+  | 'watch-display-paragraph-unavailable'
   | 'watch-display-settings'
   | 'watch-display-size'
   | 'watch-display-spacing'

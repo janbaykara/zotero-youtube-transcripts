@@ -108,6 +108,29 @@ export function looksLikeHeadline(raw: string): boolean {
 }
 
 /**
+ * Paragraph mode places breaks at sentence endings. Auto-captions with no
+ * (or vanishingly few) full stops would otherwise render as one giant run-on,
+ * so those transcripts should stay in the cue-per-line layout.
+ */
+export function supportsParagraphMode(blocks: ParagraphBlock[]): boolean {
+  if (blocks.length < 12) return true;
+
+  let sentenceCount = 0;
+  let charCount = 0;
+  for (const block of blocks) {
+    const text = stripCueText(block.quote);
+    charCount += text.length;
+    sentenceCount += countSentences(text);
+  }
+
+  if (sentenceCount === 0) return false;
+
+  // A stray period in a long unpunctuated dump is still unusable.
+  const minExpected = Math.max(3, Math.floor(charCount / 1000));
+  return sentenceCount >= minExpected;
+}
+
+/**
  * Returns true for each block that should start a new visual paragraph.
  * Index 0 is always a paragraph start.
  *

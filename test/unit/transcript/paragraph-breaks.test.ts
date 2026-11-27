@@ -5,9 +5,47 @@ import {
   countSentences,
   endsWithSentence,
   looksLikeHeadline,
+  supportsParagraphMode,
 } from "../../../src/transcript/paragraph-breaks";
 
 describe("paragraph-breaks", function () {
+  describe("supportsParagraphMode", function () {
+    it("allows short transcripts regardless of punctuation", function () {
+      const blocks = Array.from({ length: 8 }, (_, i) => ({
+        quote: `caption fragment ${i} without end`,
+        quoteTimeOffset: i * 1000,
+      }));
+      expect(supportsParagraphMode(blocks)).to.equal(true);
+    });
+
+    it("rejects long transcripts with no sentence endings", function () {
+      const blocks = Array.from({ length: 40 }, (_, i) => ({
+        quote: `auto caption words keep going without any end ${i}`,
+        quoteTimeOffset: i * 1000,
+      }));
+      expect(supportsParagraphMode(blocks)).to.equal(false);
+    });
+
+    it("rejects long transcripts with only a stray sentence ending", function () {
+      const blocks = Array.from({ length: 40 }, (_, i) => ({
+        quote:
+          i === 10
+            ? "One lonely period here."
+            : `auto caption words keep going without any end ${i}`,
+        quoteTimeOffset: i * 1000,
+      }));
+      expect(supportsParagraphMode(blocks)).to.equal(false);
+    });
+
+    it("allows punctuated lecture captions", function () {
+      const blocks = Array.from({ length: 24 }, (_, i) => ({
+        quote: `Complete spoken sentence number ${i + 1}.`,
+        quoteTimeOffset: i * 1000,
+      }));
+      expect(supportsParagraphMode(blocks)).to.equal(true);
+    });
+  });
+
   describe("looksLikeHeadline", function () {
     it("detects ALL CAPS and trailing-colon labels", function () {
       expect(looksLikeHeadline("CHAPTER TWO")).to.equal(true);
