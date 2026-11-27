@@ -5,28 +5,30 @@ import { getPref, setPref } from "../utils/prefs";
 export type WatchFont = "serif" | "sans";
 export type WatchTheme = "light" | "sepia" | "dark";
 
-/** Discrete caption font sizes (px). Default index 3 → 15. */
-export const WATCH_FONT_SIZE_STEPS = [12, 13, 14, 15, 16, 18, 22] as const;
+/** Discrete caption font sizes (px). Default index 4 (~60%) → 18. */
+export const WATCH_FONT_SIZE_STEPS = [14, 15, 16, 17, 18, 20, 24] as const;
 
 /** Discrete line-heights. Default index 2 → 1.45. */
 export const WATCH_LINE_SPACING_STEPS = [1.2, 1.35, 1.45, 1.65, 1.9] as const;
 
-/** Caption column max-widths (rem). Default index 2 → 40. */
+/** Caption column max-widths (rem). Default index 2 → 48. */
 export const WATCH_TEXT_WIDTH_STEPS = [
-  { id: "narrow", rem: 28 },
-  { id: "medium", rem: 34 },
-  { id: "wide", rem: 40 },
-  { id: "x-large", rem: 52 },
+  { id: "narrow", rem: 38 },
+  { id: "medium", rem: 44 },
+  { id: "wide", rem: 48 },
+  { id: "x-large", rem: 60 },
+  { id: "xx-large", rem: 80 },
 ] as const;
 
 export type WatchTextWidthId = (typeof WATCH_TEXT_WIDTH_STEPS)[number]["id"];
 
 export const WATCH_DISPLAY_DEFAULTS = {
   font: "serif" as WatchFont,
-  fontSizeIndex: 3,
+  fontSizeIndex: 4,
   lineSpacingIndex: 2,
   textWidthIndex: 2,
-  theme: "light" as WatchTheme,
+  theme: "dark" as WatchTheme,
+  paragraphMode: true,
 };
 
 function clampPercent(raw: number): number {
@@ -44,8 +46,8 @@ function parseFont(raw: unknown): WatchFont {
 }
 
 function parseTheme(raw: unknown): WatchTheme {
-  if (raw === "dark" || raw === "sepia") return raw;
-  return "light";
+  if (raw === "light" || raw === "sepia" || raw === "dark") return raw;
+  return WATCH_DISPLAY_DEFAULTS.theme;
 }
 
 export function useWatchAutoscroll() {
@@ -106,6 +108,12 @@ export function useWatchDisplaySettings() {
       WATCH_DISPLAY_DEFAULTS.textWidthIndex,
     ),
   );
+  const [paragraphMode, setParagraphModeState] = useState(() => {
+    const raw = getPref("watchParagraphMode");
+    return raw == null
+      ? WATCH_DISPLAY_DEFAULTS.paragraphMode
+      : Boolean(raw);
+  });
 
   const setFont = useCallback((next: WatchFont) => {
     setPref("watchFont", next);
@@ -147,18 +155,25 @@ export function useWatchDisplaySettings() {
     setTextWidthIndexState(clamped);
   }, []);
 
+  const setParagraphMode = useCallback((next: boolean) => {
+    setPref("watchParagraphMode", next);
+    setParagraphModeState(next);
+  }, []);
+
   const clear = useCallback(() => {
     setFont(WATCH_DISPLAY_DEFAULTS.font);
     setFontSizeIndex(WATCH_DISPLAY_DEFAULTS.fontSizeIndex);
     setLineSpacingIndex(WATCH_DISPLAY_DEFAULTS.lineSpacingIndex);
     setTextWidthIndex(WATCH_DISPLAY_DEFAULTS.textWidthIndex);
     setTheme(WATCH_DISPLAY_DEFAULTS.theme);
+    setParagraphMode(WATCH_DISPLAY_DEFAULTS.paragraphMode);
   }, [
     setFont,
     setFontSizeIndex,
     setLineSpacingIndex,
     setTextWidthIndex,
     setTheme,
+    setParagraphMode,
   ]);
 
   const textWidth = WATCH_TEXT_WIDTH_STEPS[textWidthIndex];
@@ -169,6 +184,7 @@ export function useWatchDisplaySettings() {
     lineSpacingIndex,
     textWidthIndex,
     theme,
+    paragraphMode,
     fontSizePx: WATCH_FONT_SIZE_STEPS[fontSizeIndex],
     lineHeight: WATCH_LINE_SPACING_STEPS[lineSpacingIndex],
     textWidthRem: textWidth.rem,
@@ -178,6 +194,7 @@ export function useWatchDisplaySettings() {
     setLineSpacingIndex,
     setTextWidthIndex,
     setTheme,
+    setParagraphMode,
     clear,
   };
 }

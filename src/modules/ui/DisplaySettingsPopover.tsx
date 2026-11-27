@@ -19,11 +19,13 @@ export interface DisplaySettingsPopoverProps {
   textWidthIndex: number;
   textWidthId: WatchTextWidthId;
   theme: WatchTheme;
+  paragraphMode: boolean;
   onFont: (font: WatchFont) => void;
   onFontSizeIndex: (index: number) => void;
   onLineSpacingIndex: (index: number) => void;
   onTextWidthIndex: (index: number) => void;
   onTheme: (theme: WatchTheme) => void;
+  onParagraphMode: (enabled: boolean) => void;
   onClear: () => void;
   onClose: () => void;
 }
@@ -38,6 +40,8 @@ function textWidthLabel(id: WatchTextWidthId): string {
       return getString("watch-display-width-wide");
     case "x-large":
       return getString("watch-display-width-x-large");
+    case "xx-large":
+      return getString("watch-display-width-xx-large");
   }
 }
 
@@ -99,11 +103,13 @@ export function DisplaySettingsPopover({
   textWidthIndex,
   textWidthId,
   theme,
+  paragraphMode,
   onFont,
   onFontSizeIndex,
   onLineSpacingIndex,
   onTextWidthIndex,
   onTheme,
+  onParagraphMode,
   onClear,
   onClose,
 }: DisplaySettingsPopoverProps) {
@@ -299,6 +305,17 @@ export function DisplaySettingsPopover({
           </button>
         </div>
       </div>
+
+      <label className="yt-watch-display-paragraph">
+        <input
+          type="checkbox"
+          checked={paragraphMode}
+          onChange={(event) =>
+            onParagraphMode((event.currentTarget as HTMLInputElement).checked)
+          }
+        />
+        <span>{getString("watch-display-paragraph")}</span>
+      </label>
     </div>
   );
 }

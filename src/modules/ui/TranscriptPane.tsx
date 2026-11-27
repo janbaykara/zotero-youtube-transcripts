@@ -1,9 +1,10 @@
 import type { ComponentChildren } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 
 import { findActiveBlockIndex } from "../../transcript/active-line";
 import { formatAnnotationCommentHtml } from "../../transcript/comment-html";
 import { transcriptLineAnchorId } from "../../transcript/line-anchor";
+import { computeParagraphStarts } from "../../transcript/paragraph-breaks";
 import { formatTimestamp } from "../../transcript/timestamp";
 import type { TranscriptBlock } from "../../transcript/types";
 import {
@@ -36,6 +37,8 @@ interface TranscriptPaneProps {
   autoscroll: boolean;
   jumpToken: number;
   highlights: TranscriptHighlight[];
+  /** Flow captions as continuous prose with paragraph breaks. */
+  paragraphMode?: boolean;
   /** Frozen create-session ranges — painted after native selection is cleared. */
   pendingRanges?: TranscriptSelectionRange[];
   findMatches?: TranscriptFindMatch[];
@@ -108,6 +111,32 @@ function wrapDecorativeMarks(
   return <span key={keyBase}>{content}</span>;
 }
 
+/** Same annotation covers the end of this cue and the start of the next. */
+function continuingMark(
+  marks: TranscriptHighlight[],
+  textLen: number,
+  nextMarks: TranscriptHighlight[],
+): TranscriptHighlight | null {
+  for (const mark of marks) {
+    if (mark.end < textLen) continue;
+    if (nextMarks.some((next) => next.id === mark.id && next.start === 0)) {
+      return mark;
+    }
+  }
+  return null;
+}
+
+function pendingContinues(
+  pending: LinePendingHit[],
+  textLen: number,
+  nextPending: LinePendingHit[],
+): boolean {
+  return (
+    pending.some((hit) => hit.end >= textLen) &&
+    nextPending.some((hit) => hit.start === 0 && hit.end > 0)
+  );
+}
+
 /** Render caption text with annotation, find, and pending-selection marks. */
 function renderHighlightedText(
   text: string,
@@ -119,6 +148,11 @@ function renderHighlightedText(
     highlight: TranscriptHighlight,
     anchor: SelectionAnchor,
   ) => void,
+  /** Fold the paragraph-mode inter-cue space into a continuing mark. */
+  bridge?: {
+    mark: TranscriptHighlight | null;
+    pending: boolean;
+  },
 ): ComponentChildren {
   if (
     marks.length === 0 &&
@@ -143,12 +177,22 @@ function renderHighlightedText(
   }
   const edges = [...points].sort((a, b) => a - b);
   const nodes: ComponentChildren[] = [];
+  const bridgeMark = bridge?.mark ?? null;
+  const bridgePending = !!bridge?.pending;
 
   for (let i = 0; i < edges.length - 1; i++) {
     const start = edges[i];
     const end = edges[i + 1];
     if (end <= start) continue;
-    const slice = text.slice(start, end);
+    const atCueEnd = end >= text.length;
+    const trailingSpace =
+      atCueEnd &&
+      ((bridgeMark &&
+        bridgeMark.start <= start &&
+        bridgeMark.end >= end) ||
+        (bridgePending &&
+          pendingHits.some((h) => h.start <= start && h.end >= end)));
+    const slice = `${text.slice(start, end)}${trailingSpace ? " " : ""}`;
     const covering = marks.filter((m) => m.start <= start && m.end >= end);
     const findHit = findHits.find((h) => h.start <= start && h.end >= end);
     const pending = pendingHits.some((h) => h.start <= start && h.end >= end);
@@ -232,6 +276,7 @@ export function TranscriptPane({
   autoscroll,
   jumpToken,
   highlights,
+  paragraphMode = true,
   pendingRanges = [],
   findMatches = [],
   activeMatchIndex = -1,
@@ -242,6 +287,9 @@ export function TranscriptPane({
   onMarkClick,
 }: TranscriptPaneProps) {
   const activeIndex = findActiveBlockIndex(blocks, currentTimeMs);
+  const paragraphStarts = paragraphMode
+    ? computeParagraphStarts(blocks)
+    : null;
   const listRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
   const lastScrolledIndex = useRef<number>(-1);
@@ -255,6 +303,42 @@ export function TranscriptPane({
   onUserScrollRef.current = onUserScroll;
   const autoscrollRef = useRef(autoscroll);
   autoscrollRef.current = autoscroll;
+
+  /** Pin comment stacks into the reserved right gutter (paragraph mode). */
+  useLayoutEffect(() => {
+    if (!paragraphMode) return;
+    const pane = listRef.current;
+    if (!pane) return;
+    const inner = pane.querySelector(
+      ".yt-watch-transcript-inner",
+    ) as HTMLElement | null;
+    if (!inner) return;
+
+    const place = () => {
+      const innerTop = inner.getBoundingClientRect().top;
+      const stacks = pane.querySelectorAll(".yt-watch-line-comments");
+      for (let i = 0; i < stacks.length; i++) {
+        const stack = stacks[i] as HTMLElement;
+        const line = stack.closest(".yt-watch-line");
+        const text = line?.querySelector(".yt-watch-line-text");
+        if (!text) continue;
+        const top = text.getBoundingClientRect().top - innerTop;
+        stack.style.top = `${Math.max(0, top)}px`;
+      }
+    };
+
+    place();
+    const win = pane.ownerDocument.defaultView;
+    const ResizeObserverCtor = win?.ResizeObserver;
+    const ro = ResizeObserverCtor ? new ResizeObserverCtor(place) : null;
+    ro?.observe(inner);
+    ro?.observe(pane);
+    win?.addEventListener("resize", place);
+    return () => {
+      ro?.disconnect();
+      win?.removeEventListener("resize", place);
+    };
+  }, [paragraphMode, blocks, highlights, pendingRanges, findMatches]);
 
   useEffect(() => {
     if (findActive) return;
@@ -446,6 +530,10 @@ export function TranscriptPane({
               highlights,
               block.quoteTimeOffset,
             );
+            const nextBlock = blocks[index + 1];
+            const nextMarks = nextBlock
+              ? highlightsForLine(highlights, nextBlock.quoteTimeOffset)
+              : [];
             const lineFindHits: LineFindHit[] = [];
             for (let mi = 0; mi < findMatches.length; mi++) {
               for (const seg of findMatches[mi].segments) {
@@ -461,11 +549,30 @@ export function TranscriptPane({
             const linePendingHits: LinePendingHit[] = pendingRanges
               .filter((r) => r.lineOffsetMs === block.quoteTimeOffset)
               .map((r) => ({ start: r.start, end: r.end }));
+            const nextPendingHits: LinePendingHit[] = nextBlock
+              ? pendingRanges
+                  .filter((r) => r.lineOffsetMs === nextBlock.quoteTimeOffset)
+                  .map((r) => ({ start: r.start, end: r.end }))
+              : [];
+            const bridgeMark = paragraphMode
+              ? continuingMark(lineMarks, text.length, nextMarks)
+              : null;
+            const bridgePending =
+              paragraphMode &&
+              pendingContinues(
+                linePendingHits,
+                text.length,
+                nextPendingHits,
+              );
             const commentedMarks = marksWithComments(lineMarks);
             const timeLabel = formatTimestamp(block.quoteTimeOffset);
             const anchorId = transcriptLineAnchorId(block.quoteTimeOffset);
+            const paragraphStart = !!paragraphStarts?.[index];
             return (
-              <li key={`${block.quoteTimeOffset}-${index}`}>
+              <li
+                key={`${block.quoteTimeOffset}-${index}`}
+                className={paragraphStart ? "paragraph-start" : undefined}
+              >
                 <div
                   ref={active ? activeRef : undefined}
                   className={`yt-watch-line${active ? " active" : ""}${
@@ -479,8 +586,35 @@ export function TranscriptPane({
                   */}
                   <span
                     id={anchorId}
-                    className="yt-watch-line-text"
+                    className={`yt-watch-line-text${
+                      bridgeMark || bridgePending
+                        ? " yt-watch-line-text-bridged"
+                        : ""
+                    }`}
                     data-line-offset={block.quoteTimeOffset}
+                    onClick={(event) => {
+                      if (!paragraphMode) return;
+                      const target = event.target as
+                        | (EventTarget & {
+                            closest?: (s: string) => Element | null;
+                          })
+                        | null;
+                      // Highlights / comments own their clicks.
+                      if (
+                        target?.closest?.(
+                          ".yt-watch-mark, .yt-watch-line-comment, a",
+                        )
+                      ) {
+                        return;
+                      }
+                      const win =
+                        (event.currentTarget as HTMLElement).ownerDocument
+                          ?.defaultView ?? null;
+                      const sel = win?.getSelection();
+                      // Drag-selected text should not seek.
+                      if (sel && !sel.isCollapsed) return;
+                      onSeek(block.quoteTimeOffset);
+                    }}
                   >
                     {renderHighlightedText(
                       text,
@@ -489,6 +623,9 @@ export function TranscriptPane({
                       linePendingHits,
                       activeMatchIndex,
                       onMarkClick,
+                      paragraphMode
+                        ? { mark: bridgeMark, pending: bridgePending }
+                        : undefined,
                     )}
                   </span>
                   <button
@@ -499,59 +636,66 @@ export function TranscriptPane({
                     title={timeLabel}
                     onClick={() => onSeek(block.quoteTimeOffset)}
                   />
-                  {commentedMarks.map((mark, commentIndex) => {
-                    const commentHtml = formatAnnotationCommentHtml(
-                      mark.comment,
-                    );
-                    if (!commentHtml) return null;
-                    return (
-                      <div
-                        key={`comment-${mark.id}`}
-                        className={`yt-watch-line-comment${
-                          commentIndex > 0
-                            ? " yt-watch-line-comment-follow"
-                            : ""
-                        }`}
-                        data-annotation-id={String(mark.id)}
-                        role="button"
-                        tabIndex={0}
-                        // Sanitized in formatAnnotationCommentHtml.
-                        dangerouslySetInnerHTML={{ __html: commentHtml }}
-                        onMouseDown={(event) => {
-                          event.stopPropagation();
-                        }}
-                        onClick={(event) => {
-                          const target = event.target as
-                            | (EventTarget & {
-                                closest?: (s: string) => Element | null;
-                              })
-                            | null;
-                          // Let in-comment links navigate without opening the editor.
-                          if (target?.closest?.("a")) return;
-                          event.preventDefault();
-                          event.stopPropagation();
-                          const el = event.currentTarget as HTMLElement;
-                          const rect = el.getBoundingClientRect();
-                          onMarkClick(mark, {
-                            clientX: rect.left,
-                            clientY: rect.top + rect.height / 2,
-                          });
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key !== "Enter" && event.key !== " ") {
-                            return;
-                          }
-                          event.preventDefault();
-                          const el = event.currentTarget as HTMLElement;
-                          const rect = el.getBoundingClientRect();
-                          onMarkClick(mark, {
-                            clientX: rect.left,
-                            clientY: rect.top + rect.height / 2,
-                          });
-                        }}
-                      />
-                    );
-                  })}
+                  {commentedMarks.length > 0 ? (
+                    <div className="yt-watch-line-comments">
+                      {commentedMarks.map((mark, commentIndex) => {
+                        const commentHtml = formatAnnotationCommentHtml(
+                          mark.comment,
+                        );
+                        if (!commentHtml) return null;
+                        return (
+                          <div
+                            key={`comment-${mark.id}`}
+                            className={`yt-watch-line-comment${
+                              commentIndex > 0
+                                ? " yt-watch-line-comment-follow"
+                                : ""
+                            }`}
+                            data-annotation-id={String(mark.id)}
+                            role="button"
+                            tabIndex={0}
+                            // Sanitized in formatAnnotationCommentHtml.
+                            dangerouslySetInnerHTML={{ __html: commentHtml }}
+                            onMouseDown={(event) => {
+                              event.stopPropagation();
+                            }}
+                            onClick={(event) => {
+                              const target = event.target as
+                                | (EventTarget & {
+                                    closest?: (s: string) => Element | null;
+                                  })
+                                | null;
+                              // Let in-comment links navigate without opening the editor.
+                              if (target?.closest?.("a")) return;
+                              event.preventDefault();
+                              event.stopPropagation();
+                              const el = event.currentTarget as HTMLElement;
+                              const rect = el.getBoundingClientRect();
+                              onMarkClick(mark, {
+                                clientX: rect.left,
+                                clientY: rect.top + rect.height / 2,
+                              });
+                            }}
+                            onKeyDown={(event) => {
+                              if (
+                                event.key !== "Enter" &&
+                                event.key !== " "
+                              ) {
+                                return;
+                              }
+                              event.preventDefault();
+                              const el = event.currentTarget as HTMLElement;
+                              const rect = el.getBoundingClientRect();
+                              onMarkClick(mark, {
+                                clientX: rect.left,
+                                clientY: rect.top + rect.height / 2,
+                              });
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               </li>
             );

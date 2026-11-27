@@ -18,6 +18,7 @@ declare namespace _ZoteroTypes {
       "watchLineSpacing": number;
       "watchTheme": string;
       "watchTextWidth": number;
+      "watchParagraphMode": boolean;
     };
   }
 }

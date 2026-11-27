@@ -335,6 +335,13 @@ tab-content[id^="yt-watch-"],
   opacity: 0.7;
 }
 
+/* Chrome skin SVGs are dark glyphs — invert for dark appearance. */
+.yt-watch-root.theme-dark .yt-watch-float-controls .yt-watch-tool-btn img,
+.yt-watch-root.theme-dark .yt-watch-bottom-btn img,
+.yt-watch-root.theme-dark .yt-watch-find-bar img {
+  filter: invert(1) brightness(1.05);
+}
+
 .yt-watch-icon-flip-x {
   transform: scaleX(-1);
 }
@@ -772,6 +779,29 @@ tab-content[id^="yt-watch-"],
   cursor: default;
 }
 
+.yt-watch-display-paragraph {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--material-border, rgba(128, 128, 128, 0.28));
+  color: var(--fill-primary, CanvasText);
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  user-select: none;
+}
+
+.yt-watch-display-paragraph input[type="checkbox"] {
+  appearance: auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent-blue, #2ea8e5);
+  cursor: pointer;
+}
+
 .yt-watch-tool-btn {
   appearance: none;
   display: inline-flex;
@@ -838,14 +868,88 @@ tab-content[id^="yt-watch-"],
   width: min(240px, calc(100% - 16px));
 }
 
+.yt-watch-highlight-popover-listed {
+  width: max-content;
+  min-width: 12.5rem;
+  max-width: min(20rem, calc(100% - 16px));
+}
+
+.yt-watch-highlight-popover-listed.yt-watch-highlight-popover-edit {
+  width: min(17.5rem, calc(100% - 16px));
+}
+
 .yt-watch-color-row {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
+.yt-watch-color-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  min-width: 0;
+}
+
+.yt-watch-color-row-btn {
+  appearance: none;
+  -moz-appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.28rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fill-primary, CanvasText);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+
+.yt-watch-color-row-btn:hover {
+  background: color-mix(in srgb, var(--fill-secondary, #888) 12%, transparent);
+}
+
+.yt-watch-color-row-btn.selected {
+  background: color-mix(in srgb, var(--accent-blue, #2ea8e5) 14%, transparent);
+}
+
+.yt-watch-color-row-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.yt-watch-color-row-btn .yt-watch-color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  cursor: inherit;
+  transform: none;
+}
+
+.yt-watch-color-row-btn:hover .yt-watch-color-swatch {
+  transform: none;
+}
+
+.yt-watch-color-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .yt-watch-color-swatch {
   appearance: none;
+  -moz-appearance: none;
+  display: inline-block;
+  box-sizing: border-box;
   width: 18px;
   height: 18px;
   margin: 0;
@@ -857,36 +961,47 @@ tab-content[id^="yt-watch-"],
   box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 35%, transparent);
 }
 
-.yt-watch-color-swatch.selected {
+button.yt-watch-color-swatch.selected {
   outline: 2px solid var(--fill-primary, CanvasText);
   outline-offset: 1px;
 }
 
-.yt-watch-color-swatch:hover {
+button.yt-watch-color-swatch:hover {
   transform: scale(1.12);
 }
 
-.yt-watch-color-swatch:focus-visible {
+button.yt-watch-color-swatch:focus-visible {
   outline: 2px solid var(--accent-blue, #2ea8e5);
   outline-offset: 1px;
 }
 
-.yt-watch-color-swatch:disabled {
+button.yt-watch-color-swatch:disabled {
   opacity: 0.45;
   cursor: default;
   transform: none;
 }
 
+.yt-watch-highlight-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
+  border-radius: 6px;
+  background: var(--material-background, Canvas);
+}
+
 .yt-watch-highlight-comment {
   box-sizing: border-box;
   width: 100%;
-  min-height: 4.5rem;
+  min-height: 3.6rem;
   resize: vertical;
   margin: 0;
-  padding: 0.4rem 0.45rem;
-  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
-  border-radius: 4px;
-  background: var(--material-background, Canvas);
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  border-bottom: 1px solid var(--material-border, rgba(128, 128, 128, 0.28));
+  border-radius: 0;
+  background: transparent;
   color: var(--fill-primary, CanvasText);
   font: inherit;
   font-size: 12px;
@@ -894,8 +1009,49 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-highlight-comment:focus {
-  outline: 2px solid var(--accent-blue, #2ea8e5);
-  outline-offset: 0;
+  outline: none;
+  background: color-mix(in srgb, var(--accent-blue, #2ea8e5) 6%, transparent);
+}
+
+.yt-watch-highlight-tags-btn {
+  appearance: none;
+  -moz-appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  background: color-mix(in srgb, var(--fill-secondary, #888) 6%, transparent);
+  color: var(--fill-secondary, GrayText);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yt-watch-highlight-tags-btn:hover:not(:disabled) {
+  color: var(--fill-primary, CanvasText);
+  background: color-mix(in srgb, var(--fill-secondary, #888) 10%, transparent);
+}
+
+.yt-watch-highlight-tags-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.yt-watch-highlight-meta:focus-within {
+  border-color: color-mix(
+    in srgb,
+    var(--accent-blue, #2ea8e5) 55%,
+    transparent
+  );
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--accent-blue, #2ea8e5) 25%, transparent);
 }
 
 .yt-watch-highlight-edit-actions {
@@ -927,7 +1083,7 @@ tab-content[id^="yt-watch-"],
 
 .yt-watch-transcript-inner {
   box-sizing: border-box;
-  width: min(var(--yt-watch-text-width, 40rem), 100%);
+  width: min(var(--yt-watch-text-width, 48rem), 100%);
   margin: 0 auto;
   /* Extra bottom padding so the autoscroll pill does not cover the last lines. */
   padding: 1rem 1.25rem 3.75rem;
@@ -937,6 +1093,133 @@ tab-content[id^="yt-watch-"],
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/*
+ * Paragraph mode: run captions as continuous prose with soft breaks
+ * between detected paragraphs. Works at any text width.
+ */
+.yt-watch-transcript-section.paragraph-mode .yt-watch-transcript-list {
+  display: block;
+  text-align: start;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-transcript-list > li {
+  display: inline;
+}
+
+.yt-watch-transcript-section.paragraph-mode
+  .yt-watch-transcript-list
+  > li.paragraph-start::before {
+  content: "";
+  display: block;
+  height: 0.95em;
+}
+
+.yt-watch-transcript-section.paragraph-mode
+  .yt-watch-transcript-list
+  > li.paragraph-start:first-child::before {
+  display: none;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-transcript-inner {
+  position: relative;
+  /* Prose width + reserved right gutter for margin notes. */
+  width: min(calc(var(--yt-watch-text-width, 48rem) + 12rem), 100%);
+  padding-right: 12rem;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line {
+  display: inline;
+  /* static so absolute comment stacks position against .yt-watch-transcript-inner */
+  position: static;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line::before {
+  display: none;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line-text {
+  display: inline;
+  cursor: pointer;
+  /* No horizontal padding — that opened gaps between cues. */
+  padding: 0.12em 0;
+  border-radius: 0.25em;
+  background: transparent;
+  /*
+   * Absolute ::before only paints one box; clone the background onto each
+   * line fragment so wrapped active cues stay highlighted.
+   */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.yt-watch-transcript-section.paragraph-mode
+  .yt-watch-line:hover
+  .yt-watch-line-text {
+  background: color-mix(in srgb, var(--fill-secondary, #888) 12%, transparent);
+}
+
+.yt-watch-transcript-section.paragraph-mode
+  .yt-watch-line.active
+  .yt-watch-line-text {
+  background: color-mix(in srgb, var(--accent-blue, #2ea8e5) 18%, transparent);
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line-text::after {
+  content: " ";
+}
+
+/* Inter-cue space lives inside the continuing <mark> instead. */
+.yt-watch-transcript-section.paragraph-mode
+  .yt-watch-line-text.yt-watch-line-text-bridged::after {
+  content: none;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line-time {
+  display: none !important;
+}
+
+/*
+ * Margin notes: pulled out of the inline prose into the reserved gutter.
+ * Vertical `top` is set in TranscriptPane (useLayoutEffect).
+ */
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line-comments {
+  position: absolute;
+  right: 1.25rem;
+  left: auto;
+  width: 10.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  grid-column: unset;
+  grid-row: unset;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.yt-watch-transcript-section.paragraph-mode
+  .yt-watch-line.has-comment
+  .yt-watch-line-comments {
+  pointer-events: auto;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line-comment {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  grid-column: unset;
+  grid-row: unset;
+}
+
+.yt-watch-transcript-section.paragraph-mode .yt-watch-line-comment-follow {
+  margin-top: 0;
 }
 
 .yt-watch-line {
@@ -1055,9 +1338,21 @@ tab-content[id^="yt-watch-"],
   color: var(--fill-primary, CanvasText);
 }
 
-.yt-watch-line-comment {
+.yt-watch-line-comments {
   grid-column: 3;
   grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.yt-watch-line.has-comment .yt-watch-line-comments {
+  pointer-events: auto;
+}
+
+.yt-watch-line-comment {
   min-width: 0;
   padding-top: 0.15rem;
   font-size: 12px;

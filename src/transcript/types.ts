@@ -12,4 +12,6 @@ export interface TranscriptLine {
 export interface TranscriptBlock {
   quote: string;
   quoteTimeOffset: number;
+  /** Caption cue duration in ms, when known (helps paragraph silence gaps). */
+  durationMs?: number;
 }

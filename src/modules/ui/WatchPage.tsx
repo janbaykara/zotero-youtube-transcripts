@@ -12,6 +12,7 @@ import { getString } from "../../utils/locale";
 import {
   createTranscriptHighlights,
   deleteTranscriptHighlight,
+  isHighlightDescriptionsActive,
   updateTranscriptHighlight,
   type SelectionAnchor,
   type TranscriptHighlight,
@@ -139,6 +140,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
       .map((line) => ({
         quote: line.text,
         quoteTimeOffset: line.offset,
+        durationMs: line.duration,
       }));
   }, [data]);
 
@@ -148,6 +150,14 @@ export function WatchPage({ itemID }: WatchPageProps) {
   }, [attachmentID, blocks]);
 
   const highlights = useAttachmentHighlights(attachmentID);
+  const libraryID = useMemo(() => {
+    if (attachmentID == null) return null;
+    try {
+      return Zotero.Items.get(attachmentID)?.libraryID ?? null;
+    } catch {
+      return null;
+    }
+  }, [attachmentID]);
 
   const findMatches = useMemo(
     () => (findOpen ? findTranscriptMatches(blocks, findQuery) : []),
@@ -197,6 +207,16 @@ export function WatchPage({ itemID }: WatchPageProps) {
       }
     };
 
+    const isTypingTarget = (target: EventTarget | null) => {
+      const el = target as
+        | (EventTarget & { closest?: (s: string) => Element | null })
+        | null;
+      if (!el?.closest) return false;
+      return !!el.closest(
+        "textarea, input, editable-text, [contenteditable='true']",
+      );
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (!isThisTabSelected()) return;
       const mod = event.metaKey || event.ctrlKey;
@@ -204,6 +224,18 @@ export function WatchPage({ itemID }: WatchPageProps) {
         event.preventDefault();
         event.stopPropagation();
         openFind();
+        return;
+      }
+      // Space toggles playback (starts a cold player), unless typing in a field.
+      if (
+        !mod &&
+        !event.altKey &&
+        (event.key === " " || event.code === "Space")
+      ) {
+        if (isTypingTarget(event.target)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        playerRef.current?.toggle();
         return;
       }
       if (!findOpen) return;
@@ -265,7 +297,8 @@ export function WatchPage({ itemID }: WatchPageProps) {
 
   const onSeek = useCallback((offsetMs: number) => {
     const seconds = Math.max(0, offsetMs / 1000);
-    playerRef.current?.seekTo(seconds);
+    // Cue / timestamp clicks always seek and play (incl. when paused / cold).
+    playerRef.current?.seekTo(seconds, { play: true });
     setCurrentTimeMs(offsetMs);
   }, []);
 
@@ -317,8 +350,8 @@ export function WatchPage({ itemID }: WatchPageProps) {
     setCreateSession(null);
   }, []);
 
-  const onHighlightColor = useCallback(
-    async (color: string) => {
+  const onHighlightCreate = useCallback(
+    async (color: string, comment: string, tags: string[]) => {
       if (attachmentID == null || highlightBusy) return;
       const root = rootRef.current;
       const pane = root?.querySelector(
@@ -342,12 +375,18 @@ export function WatchPage({ itemID }: WatchPageProps) {
       const attachment = Zotero.Items.get(attachmentID);
       if (!attachment) return;
 
+      const anchor = createSessionRef.current?.anchor ?? null;
+      const cleanedTags = tags
+        .map((tag) => tag.replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+      const cleanedComment = comment.trim();
       setHighlightBusy(true);
       try {
         const created = await createTranscriptHighlights(
           attachment,
           ranges,
           color,
+          { comment: cleanedComment, tags: cleanedTags },
         );
         ztoolkit.log(
           "WatchPage: created highlights",
@@ -358,8 +397,26 @@ export function WatchPage({ itemID }: WatchPageProps) {
         const win = pane.ownerDocument.defaultView;
         win?.getSelection()?.removeAllRanges();
         clearCreateSession();
-        setEditingHighlight(null);
         invalidateAttachmentHighlights(attachmentID);
+        const item = created[0];
+        if (item && anchor) {
+          setEditingHighlight({
+            highlight: {
+              id: item.id,
+              key: item.key,
+              lineOffsetMs: ranges[0].lineOffsetMs,
+              start: ranges[0].start,
+              end: ranges[0].end,
+              color,
+              text: ranges.map((r) => r.text).join(" "),
+              comment: cleanedComment,
+              tags: cleanedTags,
+            },
+            anchor,
+          });
+        } else {
+          setEditingHighlight(null);
+        }
       } catch (err) {
         ztoolkit.log("WatchPage: highlight failed", err);
       } finally {
@@ -372,6 +429,8 @@ export function WatchPage({ itemID }: WatchPageProps) {
   const onMarkClick = useCallback(
     (highlight: TranscriptHighlight, anchor: SelectionAnchor) => {
       clearCreateSession();
+      // Same as a timestamp / cue click — jump and play from this line.
+      onSeek(highlight.lineOffsetMs);
       setEditingHighlight((prev) => {
         // Re-click is handled by the edit popover (save + close). If we still
         // get a click for the same mark, ignore so we don't reopen empty.
@@ -379,7 +438,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
         return { highlight, anchor };
       });
     },
-    [clearCreateSession],
+    [clearCreateSession, onSeek],
   );
 
   const onEditColor = useCallback(
@@ -424,6 +483,23 @@ export function WatchPage({ itemID }: WatchPageProps) {
         }
       } catch (err) {
         ztoolkit.log("WatchPage: comment failed", err);
+      }
+    },
+    [attachmentID],
+  );
+
+  const onEditTags = useCallback(
+    (tags: string[]) => {
+      // Native tags-box already persisted via item.saveTx.
+      const id = editingHighlightIdRef.current;
+      if (id == null) return;
+      setEditingHighlight((prev) =>
+        prev && prev.highlight.id === id
+          ? { ...prev, highlight: { ...prev.highlight, tags } }
+          : prev,
+      );
+      if (attachmentID != null) {
+        invalidateAttachmentHighlights(attachmentID);
       }
     },
     [attachmentID],
@@ -490,8 +566,21 @@ export function WatchPage({ itemID }: WatchPageProps) {
     const anchor = editingHighlight?.anchor ?? createSession?.anchor ?? null;
     if (!anchor || !transcriptSectionRef.current) return null;
     const host = transcriptSectionRef.current.getBoundingClientRect();
-    const popoverW = editingHighlight ? 240 : 196;
-    const popoverH = editingHighlight ? 160 : 36;
+    const listed = isHighlightDescriptionsActive();
+    const popoverW = listed
+      ? editingHighlight
+        ? 280
+        : 220
+      : editingHighlight
+        ? 260
+        : 196;
+    const popoverH = listed
+      ? editingHighlight
+        ? 380
+        : 230
+      : editingHighlight
+        ? 260
+        : 36;
     let left = anchor.clientX - host.left;
     let top = anchor.clientY - host.top - (editingHighlight ? 0 : popoverH / 2);
 
@@ -639,7 +728,9 @@ export function WatchPage({ itemID }: WatchPageProps) {
 
       <div
         ref={transcriptSectionRef}
-        className="yt-watch-transcript-section"
+        className={`yt-watch-transcript-section text-width-${display.textWidthId}${
+          display.paragraphMode ? " paragraph-mode" : ""
+        }`}
         style={
           {
             "--yt-watch-font":
@@ -695,11 +786,13 @@ export function WatchPage({ itemID }: WatchPageProps) {
               textWidthIndex={display.textWidthIndex}
               textWidthId={display.textWidthId}
               theme={display.theme}
+              paragraphMode={display.paragraphMode}
               onFont={display.setFont}
               onFontSizeIndex={display.setFontSizeIndex}
               onLineSpacingIndex={display.setLineSpacingIndex}
               onTextWidthIndex={display.setTextWidthIndex}
               onTheme={display.setTheme}
+              onParagraphMode={display.setParagraphMode}
               onClear={display.clear}
               onClose={() => setDisplayOpen(false)}
             />
@@ -775,6 +868,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
             highlight={editingHighlight.highlight}
             onColor={(color) => void onEditColor(color)}
             onComment={(comment) => void onEditComment(comment)}
+            onTags={onEditTags}
             onRemove={() => void onRemoveHighlight()}
             onClose={() => setEditingHighlight(null)}
           />
@@ -782,13 +876,17 @@ export function WatchPage({ itemID }: WatchPageProps) {
         {popoverPos &&
         !editingHighlight &&
         createSession &&
-        createSession.ranges.length > 0 ? (
+        createSession.ranges.length > 0 &&
+        libraryID != null ? (
           <HighlightPopover
             mode="create"
             left={popoverPos.left}
             top={popoverPos.top}
             busy={highlightBusy}
-            onPick={(color) => void onHighlightColor(color)}
+            libraryID={libraryID}
+            onCreate={(color, comment, tags) =>
+              void onHighlightCreate(color, comment, tags)
+            }
           />
         ) : null}
         <TranscriptPane
@@ -797,6 +895,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
           autoscroll={autoscroll}
           jumpToken={jumpToken}
           highlights={highlights}
+          paragraphMode={display.paragraphMode}
           pendingRanges={createSession?.ranges ?? []}
           findMatches={findMatches}
           activeMatchIndex={matchIndex}

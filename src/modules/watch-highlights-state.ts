@@ -81,7 +81,9 @@ function highlightsEqual(
       x.end !== y.end ||
       x.color !== y.color ||
       x.text !== y.text ||
-      x.comment !== y.comment
+      x.comment !== y.comment ||
+      x.tags.length !== y.tags.length ||
+      x.tags.some((tag, ti) => tag !== y.tags[ti])
     ) {
       return false;
     }

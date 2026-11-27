@@ -22,6 +22,25 @@ export interface TranscriptHighlight {
   color: string;
   text: string;
   comment: string;
+  tags: string[];
+}
+
+function readAnnotationTags(ann: Zotero.Item): string[] {
+  try {
+    const raw = (ann.getTags?.() ?? []) as unknown;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((entry: unknown) => {
+        if (typeof entry === "string") return entry.trim();
+        if (entry && typeof entry === "object" && "tag" in entry) {
+          return String((entry as { tag?: unknown }).tag ?? "").trim();
+        }
+        return "";
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 type AnnotationPosition = {
@@ -47,8 +66,61 @@ const FALLBACK_HIGHLIGHT_COLORS: Array<{ id: string; color: string }> = [
   { id: "general-gray", color: "#aaaaaa" },
 ];
 
+const HCD_PREF_PREFIX = "extensions.highlightdescriptions";
+
+export interface HighlightColorChoice {
+  id: string;
+  color: string;
+  /** Present when Highlight color descriptions is active. */
+  label: string | null;
+}
+
 function defaultHighlightColor(): string {
   return Zotero.Annotations?.DEFAULT_COLOR || "#ffd400";
+}
+
+function normalizeHighlightHex(raw: string): string {
+  const hex = raw.trim().toLowerCase();
+  return hex.startsWith("#") ? hex : `#${hex}`;
+}
+
+/** True while paulMrG2/zotero-highlight-descriptions is loaded. */
+export function isHighlightDescriptionsActive(): boolean {
+  try {
+    return !!(
+      Zotero as unknown as { HighlightDescriptionsPrefs?: unknown }
+    ).HighlightDescriptionsPrefs;
+  } catch {
+    return false;
+  }
+}
+
+/** Label from the plugin's prefs only — no local fallbacks. */
+function getHighlightDescription(hex: string): string | null {
+  const normalized = normalizeHighlightHex(hex);
+  const key = `${HCD_PREF_PREFIX}.color_${normalized.slice(1)}`;
+  try {
+    const stored = Zotero.Prefs.get(key, true);
+    if (stored === undefined || stored === null) return null;
+    const label = String(stored).trim();
+    return label || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Plugin color_order pref when set; otherwise empty (keep palette order). */
+function getHighlightDescriptionOrder(): string[] {
+  try {
+    const stored = Zotero.Prefs.get(`${HCD_PREF_PREFIX}.color_order`, true);
+    if (typeof stored !== "string" || !stored.trim()) return [];
+    return stored
+      .split(",")
+      .map((s) => normalizeHighlightHex(s.trim()))
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 /** Zotero reader highlight palette (id + hex). */
@@ -69,6 +141,51 @@ export function getHighlightColors(): Array<{ id: string; color: string }> {
     });
   }
   return out.length > 0 ? out : FALLBACK_HIGHLIGHT_COLORS;
+}
+
+/**
+ * Palette for the watch highlight popover.
+ * When Highlight color descriptions is active, colors are ordered/labeled
+ * from that plugin's prefs (vertical list UI).
+ */
+export function getHighlightColorChoices(): {
+  listed: boolean;
+  colors: HighlightColorChoice[];
+} {
+  const base = getHighlightColors();
+  const listed = isHighlightDescriptionsActive();
+  if (!listed) {
+    return {
+      listed: false,
+      colors: base.map((c) => ({ ...c, label: null })),
+    };
+  }
+
+  const byHex = new Map(
+    base.map((c) => [normalizeHighlightHex(c.color), c] as const),
+  );
+  const ordered: Array<{ id: string; color: string }> = [];
+  for (const hex of getHighlightDescriptionOrder()) {
+    const entry = byHex.get(hex);
+    if (!entry) continue;
+    ordered.push(entry);
+    byHex.delete(hex);
+  }
+  // Unordered leftover colors keep Zotero's palette sequence.
+  for (const color of base) {
+    const hex = normalizeHighlightHex(color.color);
+    if (!byHex.has(hex)) continue;
+    ordered.push(color);
+    byHex.delete(hex);
+  }
+
+  return {
+    listed: true,
+    colors: ordered.map((c) => ({
+      ...c,
+      label: getHighlightDescription(c.color),
+    })),
+  };
 }
 
 export interface SelectionAnchor {
@@ -195,6 +312,7 @@ function highlightsFromAnnotation(
 
   const color = ann.annotationColor || defaultHighlightColor();
   const comment = String(ann.annotationComment || "");
+  const tags = readAnnotationTags(ann);
   const position = parsePosition(ann.annotationPosition);
   const quoteExact =
     (position?.type === "TextQuoteSelector" && position.exact) ||
@@ -249,6 +367,7 @@ function highlightsFromAnnotation(
             color,
             text: lineText.slice(rawStart, rawEnd),
             comment,
+            tags,
           },
         ];
       }
@@ -269,6 +388,7 @@ function highlightsFromAnnotation(
       color,
       text: part.text,
       comment: i === 0 ? comment : "",
+      tags: i === 0 ? tags : [],
     }));
   }
 
@@ -296,6 +416,7 @@ function highlightsFromAnnotation(
       color,
       text: lineText.slice(idx, idx + cleanedQuote.length),
       comment,
+      tags,
     },
   ];
 }
@@ -458,7 +579,7 @@ export async function loadAttachmentHighlights(
 
 export async function updateTranscriptHighlight(
   annotationID: number,
-  patch: { color?: string; comment?: string },
+  patch: { color?: string; comment?: string; tags?: string[] },
 ): Promise<void> {
   const item = Zotero.Items.get(annotationID);
   if (!item || !item.isAnnotation?.()) {
@@ -469,6 +590,17 @@ export async function updateTranscriptHighlight(
   }
   if (patch.comment != null) {
     item.annotationComment = patch.comment;
+  }
+  if (patch.tags != null) {
+    try {
+      await item.loadDataType?.("tags");
+    } catch {
+      // Tags may already be loaded.
+    }
+    const cleaned = patch.tags
+      .map((tag) => tag.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+    item.setTags(cleaned);
   }
   await item.saveTx();
 }
@@ -511,6 +643,7 @@ export async function createTranscriptHighlights(
   attachment: Zotero.Item,
   ranges: TranscriptSelectionRange[],
   color = defaultHighlightColor(),
+  meta: { comment?: string; tags?: string[] } = {},
 ): Promise<Zotero.Item[]> {
   const usable = ranges.filter((r) => r.text.trim() && r.end > r.start);
   if (usable.length === 0) return [];
@@ -541,6 +674,11 @@ export async function createTranscriptHighlights(
     .trim();
   if (!quote) return [];
 
+  const comment = (meta.comment ?? "").trim();
+  const tags = (meta.tags ?? [])
+    .map((tag) => tag.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+
   const key =
     (
       Zotero as unknown as {
@@ -557,13 +695,22 @@ export async function createTranscriptHighlights(
       key,
       type: "highlight",
       text: quote,
-      comment: "",
+      comment,
       color,
       pageLabel: formatTimestamp(first.lineOffsetMs),
       sortIndex:
         built?.sortIndex ?? String(first.lineOffsetMs).padStart(8, "0"),
       position,
     } as any);
+    if (item && tags.length > 0) {
+      try {
+        await item.loadDataType?.("tags");
+      } catch {
+        // already loaded
+      }
+      item.setTags(tags);
+      await item.saveTx();
+    }
     return item ? [item] : [];
   } catch (err) {
     ztoolkit.log(
