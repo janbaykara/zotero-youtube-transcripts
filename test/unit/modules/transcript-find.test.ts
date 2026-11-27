@@ -23,19 +23,55 @@ describe("findTranscriptMatches", function () {
 
   it("matches case-insensitively on trimmed text", function () {
     expect(findTranscriptMatches(blocks, "hello")).to.deep.equal([
-      { blockIndex: 0, start: 0, end: 5 },
-      { blockIndex: 1, start: 0, end: 5 },
-      { blockIndex: 3, start: 4, end: 9 },
-      { blockIndex: 3, start: 10, end: 15 },
+      { segments: [{ blockIndex: 0, start: 0, end: 5 }] },
+      { segments: [{ blockIndex: 1, start: 0, end: 5 }] },
+      { segments: [{ blockIndex: 3, start: 4, end: 9 }] },
+      { segments: [{ blockIndex: 3, start: 10, end: 15 }] },
     ]);
   });
 
   it("finds multiple hits in one line", function () {
     expect(findTranscriptMatches(blocks, "ll")).to.deep.equal([
-      { blockIndex: 0, start: 2, end: 4 },
-      { blockIndex: 1, start: 2, end: 4 },
-      { blockIndex: 3, start: 6, end: 8 },
-      { blockIndex: 3, start: 12, end: 14 },
+      { segments: [{ blockIndex: 0, start: 2, end: 4 }] },
+      { segments: [{ blockIndex: 1, start: 2, end: 4 }] },
+      { segments: [{ blockIndex: 3, start: 6, end: 8 }] },
+      { segments: [{ blockIndex: 3, start: 12, end: 14 }] },
+    ]);
+  });
+
+  it("matches phrases that span consecutive lines", function () {
+    expect(findTranscriptMatches(blocks, "world hello")).to.deep.equal([
+      {
+        segments: [
+          { blockIndex: 0, start: 6, end: 11 },
+          { blockIndex: 1, start: 0, end: 5 },
+        ],
+      },
+    ]);
+  });
+
+  it("normalizes query whitespace for cross-line matches", function () {
+    expect(findTranscriptMatches(blocks, "world   hello")).to.deep.equal([
+      {
+        segments: [
+          { blockIndex: 0, start: 6, end: 11 },
+          { blockIndex: 1, start: 0, end: 5 },
+        ],
+      },
+    ]);
+  });
+
+  it("matches a phrase spanning more than two lines", function () {
+    expect(
+      findTranscriptMatches(blocks, "again nothing here say"),
+    ).to.deep.equal([
+      {
+        segments: [
+          { blockIndex: 1, start: 6, end: 11 },
+          { blockIndex: 2, start: 0, end: 12 },
+          { blockIndex: 3, start: 0, end: 3 },
+        ],
+      },
     ]);
   });
 

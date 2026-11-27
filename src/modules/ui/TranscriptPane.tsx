@@ -50,7 +50,11 @@ interface TranscriptPaneProps {
   ) => void;
 }
 
-type LineFindHit = TranscriptFindMatch & { matchIndex: number };
+type LineFindHit = {
+  start: number;
+  end: number;
+  matchIndex: number;
+};
 
 type LinePendingHit = {
   start: number;
@@ -426,9 +430,14 @@ export function TranscriptPane({
             );
             const lineFindHits: LineFindHit[] = [];
             for (let mi = 0; mi < findMatches.length; mi++) {
-              const match = findMatches[mi];
-              if (match.blockIndex === index) {
-                lineFindHits.push({ ...match, matchIndex: mi });
+              for (const seg of findMatches[mi].segments) {
+                if (seg.blockIndex === index) {
+                  lineFindHits.push({
+                    start: seg.start,
+                    end: seg.end,
+                    matchIndex: mi,
+                  });
+                }
               }
             }
             const linePendingHits: LinePendingHit[] = pendingRanges
