@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import {
-  openTagsBoxPopup,
-  type TagsBoxItem,
-} from "@janbaykara/zotero-chrome";
+import { openTagsBoxPopup, type TagsBoxItem } from "@janbaykara/zotero-chrome";
 
 import { getString } from "../../utils/locale";
 import {
@@ -157,8 +154,7 @@ function ColorPicker({
         {colors.map((choice) => {
           const label = colorLabel(choice);
           const isSelected =
-            !!selected &&
-            selected.toLowerCase() === choice.color.toLowerCase();
+            !!selected && selected.toLowerCase() === choice.color.toLowerCase();
           return (
             <button
               key={choice.id}
@@ -196,8 +192,7 @@ function ColorPicker({
             key={choice.id}
             type="button"
             className={`yt-watch-color-swatch${
-              selected &&
-              selected.toLowerCase() === choice.color.toLowerCase()
+              selected && selected.toLowerCase() === choice.color.toLowerCase()
                 ? " selected"
                 : ""
             }`}
@@ -312,9 +307,7 @@ function CreatePopover({
         listed={listed}
         busy={busy}
         selected={null}
-        onPick={(color) =>
-          onCreate(color, commentRef.current, tagsRef.current)
-        }
+        onPick={(color) => onCreate(color, commentRef.current, tagsRef.current)}
       />
       <div className="yt-watch-highlight-meta">
         <textarea
@@ -419,8 +412,7 @@ function EditPopover({
     const onPointerDown = (event: PointerEvent) => {
       if (tagsOpen) return;
       const target = event.target as
-        | (EventTarget & { closest?: (s: string) => Element | null })
-        | null;
+        (EventTarget & { closest?: (s: string) => Element | null }) | null;
       if (!target?.closest) return;
 
       if (target.closest(".yt-watch-highlight-popover")) return;

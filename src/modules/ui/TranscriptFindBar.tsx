@@ -33,17 +33,16 @@ export function TranscriptFindBar({
     input.select();
   }, [focusToken]);
 
-  const status =
-    !query.trim()
-      ? ""
-      : matchCount === 0
-        ? getString("watch-find-none")
-        : getString("watch-find-matches", {
-            args: {
-              current: matchIndex + 1,
-              total: matchCount,
-            },
-          });
+  const status = !query.trim()
+    ? ""
+    : matchCount === 0
+      ? getString("watch-find-none")
+      : getString("watch-find-matches", {
+          args: {
+            current: matchIndex + 1,
+            total: matchCount,
+          },
+        });
 
   return (
     <div className="yt-watch-find-bar" role="search">

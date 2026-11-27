@@ -209,8 +209,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
 
     const isTypingTarget = (target: EventTarget | null) => {
       const el = target as
-        | (EventTarget & { closest?: (s: string) => Element | null })
-        | null;
+        (EventTarget & { closest?: (s: string) => Element | null }) | null;
       if (!el?.closest) return false;
       return !!el.closest(
         "textarea, input, editable-text, [contenteditable='true']",
@@ -257,15 +256,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
     return () => {
       doc.removeEventListener("keydown", onKeyDown, true);
     };
-  }, [
-    status,
-    itemID,
-    findOpen,
-    openFind,
-    closeFind,
-    goNextMatch,
-    goPrevMatch,
-  ]);
+  }, [status, itemID, findOpen, openFind, closeFind, goNextMatch, goPrevMatch]);
 
   const onTimeUpdate = useCallback((seconds: number) => {
     const ms = Math.max(0, seconds * 1000);

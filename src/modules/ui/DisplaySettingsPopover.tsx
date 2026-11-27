@@ -1,11 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
 
 import { getString } from "../../utils/locale";
-import type {
-  WatchFont,
-  WatchTextWidthId,
-  WatchTheme,
-} from "../watch-prefs";
+import type { WatchFont, WatchTextWidthId, WatchTheme } from "../watch-prefs";
 import {
   WATCH_FONT_SIZE_STEPS,
   WATCH_LINE_SPACING_STEPS,
@@ -54,9 +50,23 @@ function TextWidthIcon() {
       aria-hidden="true"
       className="yt-watch-display-width-icon"
     >
-      <rect x="3" y="3.5" width="12" height="1.6" rx="0.7" fill="currentColor" />
+      <rect
+        x="3"
+        y="3.5"
+        width="12"
+        height="1.6"
+        rx="0.7"
+        fill="currentColor"
+      />
       <rect x="4.5" y="7" width="9" height="1.6" rx="0.7" fill="currentColor" />
-      <rect x="3.5" y="10.5" width="11" height="1.6" rx="0.7" fill="currentColor" />
+      <rect
+        x="3.5"
+        y="10.5"
+        width="11"
+        height="1.6"
+        rx="0.7"
+        fill="currentColor"
+      />
       <path
         d="M4 14.75h10M4 14.75l1.4-1.3M4 14.75l1.4 1.3M14 14.75l-1.4-1.3M14 14.75l-1.4 1.3"
         stroke="currentColor"

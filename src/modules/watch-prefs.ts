@@ -110,9 +110,7 @@ export function useWatchDisplaySettings() {
   );
   const [paragraphMode, setParagraphModeState] = useState(() => {
     const raw = getPref("watchParagraphMode");
-    return raw == null
-      ? WATCH_DISPLAY_DEFAULTS.paragraphMode
-      : Boolean(raw);
+    return raw == null ? WATCH_DISPLAY_DEFAULTS.paragraphMode : Boolean(raw);
   });
 
   const setFont = useCallback((next: WatchFont) => {

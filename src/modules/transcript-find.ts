@@ -12,8 +12,7 @@ export type TranscriptFindMatch = {
 };
 
 type HaystackMapEntry =
-  | { kind: "char"; blockIndex: number; offset: number }
-  | { kind: "sep" };
+  { kind: "char"; blockIndex: number; offset: number } | { kind: "sep" };
 
 function normalizeQuery(query: string): string {
   return query.trim().replace(/\s+/g, " ").toLowerCase();

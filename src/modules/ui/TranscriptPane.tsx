@@ -103,9 +103,7 @@ function wrapDecorativeMarks(
     );
   }
   if (pending) {
-    content = (
-      <mark className="yt-watch-pending-selection">{content}</mark>
-    );
+    content = <mark className="yt-watch-pending-selection">{content}</mark>;
   }
   // Stable key for top-level segment lists.
   return <span key={keyBase}>{content}</span>;
@@ -154,11 +152,7 @@ function renderHighlightedText(
     pending: boolean;
   },
 ): ComponentChildren {
-  if (
-    marks.length === 0 &&
-    findHits.length === 0 &&
-    pendingHits.length === 0
-  ) {
+  if (marks.length === 0 && findHits.length === 0 && pendingHits.length === 0) {
     return text;
   }
 
@@ -187,9 +181,7 @@ function renderHighlightedText(
     const atCueEnd = end >= text.length;
     const trailingSpace =
       atCueEnd &&
-      ((bridgeMark &&
-        bridgeMark.start <= start &&
-        bridgeMark.end >= end) ||
+      ((bridgeMark && bridgeMark.start <= start && bridgeMark.end >= end) ||
         (bridgePending &&
           pendingHits.some((h) => h.start <= start && h.end >= end)));
     const slice = `${text.slice(start, end)}${trailingSpace ? " " : ""}`;
@@ -200,13 +192,7 @@ function renderHighlightedText(
 
     if (covering.length === 0) {
       nodes.push(
-        wrapDecorativeMarks(
-          slice,
-          findHit,
-          pending,
-          activeMatchIndex,
-          keyBase,
-        ),
+        wrapDecorativeMarks(slice, findHit, pending, activeMatchIndex, keyBase),
       );
       continue;
     }
@@ -287,9 +273,7 @@ export function TranscriptPane({
   onMarkClick,
 }: TranscriptPaneProps) {
   const activeIndex = findActiveBlockIndex(blocks, currentTimeMs);
-  const paragraphStarts = paragraphMode
-    ? computeParagraphStarts(blocks)
-    : null;
+  const paragraphStarts = paragraphMode ? computeParagraphStarts(blocks) : null;
   const listRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<HTMLDivElement | null>(null);
   const lastScrolledIndex = useRef<number>(-1);
@@ -559,11 +543,7 @@ export function TranscriptPane({
               : null;
             const bridgePending =
               paragraphMode &&
-              pendingContinues(
-                linePendingHits,
-                text.length,
-                nextPendingHits,
-              );
+              pendingContinues(linePendingHits, text.length, nextPendingHits);
             const commentedMarks = marksWithComments(lineMarks);
             const timeLabel = formatTimestamp(block.quoteTimeOffset);
             const anchorId = transcriptLineAnchorId(block.quoteTimeOffset);
@@ -677,10 +657,7 @@ export function TranscriptPane({
                               });
                             }}
                             onKeyDown={(event) => {
-                              if (
-                                event.key !== "Enter" &&
-                                event.key !== " "
-                              ) {
+                              if (event.key !== "Enter" && event.key !== " ") {
                                 return;
                               }
                               event.preventDefault();

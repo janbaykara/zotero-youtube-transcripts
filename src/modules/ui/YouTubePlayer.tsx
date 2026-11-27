@@ -444,10 +444,7 @@ export function YouTubePlayer({
       if (!attachMedia() || !media) return;
       try {
         media.pause();
-        applySample(
-          sample ? estimateSeconds(sample, Date.now()) : 0,
-          false,
-        );
+        applySample(sample ? estimateSeconds(sample, Date.now()) : 0, false);
       } catch (err) {
         ztoolkit.log("YouTubePlayer: pause failed", err);
       }

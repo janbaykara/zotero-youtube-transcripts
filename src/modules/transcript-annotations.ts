@@ -87,9 +87,8 @@ function normalizeHighlightHex(raw: string): string {
 /** True while paulMrG2/zotero-highlight-descriptions is loaded. */
 export function isHighlightDescriptionsActive(): boolean {
   try {
-    return !!(
-      Zotero as unknown as { HighlightDescriptionsPrefs?: unknown }
-    ).HighlightDescriptionsPrefs;
+    return !!(Zotero as unknown as { HighlightDescriptionsPrefs?: unknown })
+      .HighlightDescriptionsPrefs;
   } catch {
     return false;
   }

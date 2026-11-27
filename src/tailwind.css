@@ -348,11 +348,7 @@ tab-content[id^="yt-watch-"],
 
 .yt-watch-float-controls .yt-watch-tool-btn:hover,
 .yt-watch-float-controls .yt-watch-tool-btn.active {
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 12%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 12%, transparent);
   color: var(--fill-primary, CanvasText);
 }
 
@@ -436,11 +432,7 @@ tab-content[id^="yt-watch-"],
 .yt-watch-bottom-btn:hover,
 .yt-watch-bottom-btn.active {
   color: var(--fill-primary, CanvasText);
-  background: color-mix(
-    in srgb,
-    var(--fill-secondary, #888) 12%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--fill-secondary, #888) 12%, transparent);
 }
 
 .yt-watch-bottom-btn:hover img,
@@ -450,11 +442,7 @@ tab-content[id^="yt-watch-"],
 
 .yt-watch-autoscroll-pill.active {
   color: var(--fill-primary, CanvasText);
-  background: color-mix(
-    in srgb,
-    var(--accent-blue, #2ea8e5) 14%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--accent-blue, #2ea8e5) 14%, transparent);
 }
 
 /* —— Display settings popover —— */
@@ -562,7 +550,8 @@ tab-content[id^="yt-watch-"],
 
 .yt-watch-display-theme-sample {
   display: block;
-  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+  font-family:
+    "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
     "Times New Roman", serif;
   font-size: 1.55rem;
   line-height: 1.15;

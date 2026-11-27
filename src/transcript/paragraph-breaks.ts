@@ -77,7 +77,7 @@ export function countSentences(raw: string): number {
     }
 
     const rest = text.slice(idx + 1);
-    if (rest === "" || /^[\s"'”’)\]\}]/u.test(rest)) {
+    if (rest === "" || /^[\s"'”’)\]}]/u.test(rest)) {
       count += 1;
     }
   }
