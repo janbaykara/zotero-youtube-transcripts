@@ -1,15 +1,36 @@
-import { ZoteroToolkit } from "zotero-plugin-toolkit";
+import {
+  BasicTool,
+  DialogHelper,
+  makeHelperTool,
+  MenuManager,
+  ProgressWindowHelper,
+  UITool,
+  unregister,
+} from "zotero-plugin-toolkit";
 import { config } from "../../package.json";
 
 export { createZToolkit };
 
+/**
+ * Custom toolkit that only loads helpers we use.
+ * Omitting PromptManager avoids registering the debug-only
+ * zotero://plugin and zotero://ztoolkit-debug protocol handlers
+ * that full ZoteroToolkit ships in toolkit 5.x.
+ * @see https://github.com/janbaykara/zotero-youtube-transcripts/issues/8
+ */
+class MyToolkit extends BasicTool {
+  UI = new UITool(this);
+  Menu = new MenuManager(this);
+  ProgressWindow = makeHelperTool(ProgressWindowHelper, this);
+  Dialog = makeHelperTool(DialogHelper, this);
+
+  unregisterAll() {
+    unregister(this);
+  }
+}
+
 function createZToolkit() {
-  const _ztoolkit = new ZoteroToolkit();
-  /**
-   * Alternatively, import toolkit modules you use to minify the plugin size.
-   * You can add the modules under the `MyToolkit` class below and uncomment the following line.
-   */
-  // const _ztoolkit = new MyToolkit();
+  const _ztoolkit = new MyToolkit();
   initZToolkit(_ztoolkit);
   return _ztoolkit;
 }
@@ -29,20 +50,4 @@ function initZToolkit(_ztoolkit: ReturnType<typeof createZToolkit>) {
     "default",
     `chrome://${config.addonRef}/content/icons/favicon.png`,
   );
-}
-
-import { BasicTool, unregister } from "zotero-plugin-toolkit";
-import { UITool } from "zotero-plugin-toolkit";
-
-class MyToolkit extends BasicTool {
-  UI: UITool;
-
-  constructor() {
-    super();
-    this.UI = new UITool(this);
-  }
-
-  unregisterAll() {
-    unregister(this);
-  }
 }

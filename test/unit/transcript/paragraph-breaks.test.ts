@@ -1,4 +1,4 @@
-import { equal, ok } from "assert";
+import { expect } from "chai";
 
 import {
   computeParagraphStarts,
@@ -10,28 +10,29 @@ import {
 describe("paragraph-breaks", function () {
   describe("looksLikeHeadline", function () {
     it("detects ALL CAPS and trailing-colon labels", function () {
-      ok(looksLikeHeadline("CHAPTER TWO"));
-      ok(looksLikeHeadline("Introduction:"));
+      expect(looksLikeHeadline("CHAPTER TWO")).to.equal(true);
+      expect(looksLikeHeadline("Introduction:")).to.equal(true);
     });
 
     it("rejects ordinary sentences and caption fragments", function () {
-      equal(looksLikeHeadline("He walked into the room."), false);
-      equal(looksLikeHeadline("into it today by way of"), false);
-      equal(looksLikeHeadline("an essay from 1933,"), false);
-      equal(looksLikeHeadline("Arcades Project, but I want to lead"), false);
-      equal(
-        looksLikeHeadline("This is a longer ordinary caption without end"),
+      expect(looksLikeHeadline("He walked into the room.")).to.equal(false);
+      expect(looksLikeHeadline("into it today by way of")).to.equal(false);
+      expect(looksLikeHeadline("an essay from 1933,")).to.equal(false);
+      expect(looksLikeHeadline("Arcades Project, but I want to lead")).to.equal(
         false,
       );
+      expect(
+        looksLikeHeadline("This is a longer ordinary caption without end"),
+      ).to.equal(false);
     });
   });
 
   describe("countSentences / endsWithSentence", function () {
     it("counts terminal punctuation", function () {
-      equal(countSentences("One. Two? Three!"), 3);
-      equal(countSentences("And in a sense,"), 0);
-      equal(endsWithSentence("And in a sense,"), false);
-      equal(endsWithSentence("around them."), true);
+      expect(countSentences("One. Two? Three!")).to.equal(3);
+      expect(countSentences("And in a sense,")).to.equal(0);
+      expect(endsWithSentence("And in a sense,")).to.equal(false);
+      expect(endsWithSentence("around them.")).to.equal(true);
     });
   });
 
@@ -42,9 +43,9 @@ describe("paragraph-breaks", function () {
         { quote: "More talk.", quoteTimeOffset: 1200, durationMs: 800 },
         { quote: "After a pause.", quoteTimeOffset: 5000, durationMs: 900 },
       ]);
-      equal(starts[0], true);
-      equal(starts[1], false);
-      equal(starts[2], true);
+      expect(starts[0]).to.equal(true);
+      expect(starts[1]).to.equal(false);
+      expect(starts[2]).to.equal(true);
     });
 
     it("does not break on a mid-sentence pause", function () {
@@ -60,8 +61,8 @@ describe("paragraph-breaks", function () {
           durationMs: 1200,
         },
       ]);
-      equal(starts[0], true);
-      equal(starts[1], false);
+      expect(starts[0]).to.equal(true);
+      expect(starts[1]).to.equal(false);
     });
 
     it("does not break on short mid-sentence caption cues", function () {
@@ -87,10 +88,10 @@ describe("paragraph-breaks", function () {
           durationMs: 1000,
         },
       ]);
-      equal(starts[0], true);
-      equal(starts[1], false);
-      equal(starts[2], false);
-      equal(starts[3], false);
+      expect(starts[0]).to.equal(true);
+      expect(starts[1]).to.equal(false);
+      expect(starts[2]).to.equal(false);
+      expect(starts[3]).to.equal(false);
     });
 
     it("breaks before ALL-CAPS headings and after them", function () {
@@ -107,9 +108,9 @@ describe("paragraph-breaks", function () {
           durationMs: 1000,
         },
       ]);
-      equal(starts[0], true);
-      equal(starts[1], true);
-      equal(starts[2], true);
+      expect(starts[0]).to.equal(true);
+      expect(starts[1]).to.equal(true);
+      expect(starts[2]).to.equal(true);
     });
 
     it("breaks after six finished sentences, only at a sentence boundary", function () {
@@ -131,10 +132,10 @@ describe("paragraph-breaks", function () {
         },
       ];
       const starts = computeParagraphStarts(blocks);
-      equal(starts[0], true);
+      expect(starts[0]).to.equal(true);
       // After 6 complete sentences, the next cue starts a paragraph.
-      equal(starts[6], true);
-      equal(starts[7], false);
+      expect(starts[6]).to.equal(true);
+      expect(starts[7]).to.equal(false);
     });
 
     it("does not split mid-sentence even after many cues", function () {
@@ -158,9 +159,11 @@ describe("paragraph-breaks", function () {
       // Force a would-be break after sentence 6, then ensure the following
       // mid-clause cue is the paragraph start — not a split inside it.
       const starts = computeParagraphStarts(blocks);
-      equal(starts[6], true);
-      equal(starts[6] && blocks[6].quote.includes("And in a sense"), true);
-      equal(starts[7], false);
+      expect(starts[6]).to.equal(true);
+      expect(starts[6] && blocks[6].quote.includes("And in a sense")).to.equal(
+        true,
+      );
+      expect(starts[7]).to.equal(false);
     });
   });
 });
