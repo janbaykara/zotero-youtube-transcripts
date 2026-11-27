@@ -8,7 +8,6 @@ import {
 import { chromeSkinUrl } from "@janbaykara/zotero-chrome";
 
 import type { EmbeddedTranscriptData } from "../../transcript/embedded-data";
-import { formatTimestamp } from "../../transcript/timestamp";
 import { getString } from "../../utils/locale";
 import {
   createTranscriptHighlights,
@@ -64,7 +63,10 @@ export function WatchPage({ itemID }: WatchPageProps) {
   const [attachmentID, setAttachmentID] = useState<number | null>(null);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [jumpToken, setJumpToken] = useState(0);
-  const [autoscroll, setAutoscroll] = useWatchAutoscroll();
+  const [autoscrollPref, setAutoscrollPref] = useWatchAutoscroll();
+  /** Manual scroll pauses follow for this tab mount without writing the pref. */
+  const [autoscrollPaused, setAutoscrollPaused] = useState(false);
+  const autoscroll = autoscrollPref && !autoscrollPaused;
   const [splitRatio, setSplitRatio] = useWatchSplitRatio();
   const display = useWatchDisplaySettings();
   const [displayOpen, setDisplayOpen] = useState(false);
@@ -98,6 +100,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
     let cancelled = false;
     setStatus("loading");
     setError(null);
+    setAutoscrollPaused(false);
     createSessionRef.current = null;
     setCreateSession(null);
     setEditingHighlight(null);
@@ -531,13 +534,13 @@ export function WatchPage({ itemID }: WatchPageProps) {
         if (!draggingRef.current) return;
         const rect = root.getBoundingClientRect();
         if (rect.height <= 0) return;
-        const toolbar = root.querySelector(
-          ".yt-watch-toolbar",
+        const splitter = root.querySelector(
+          ".yt-watch-splitter",
         ) as HTMLElement | null;
-        const toolbarH = toolbar?.offsetHeight ?? 0;
-        const usable = rect.height - toolbarH - 6;
+        const splitterH = splitter?.offsetHeight ?? 12;
+        const usable = rect.height - splitterH;
         if (usable <= 0) return;
-        const y = ev.clientY - rect.top - toolbarH;
+        const y = ev.clientY - rect.top;
         setSplitRatio(y / usable);
       };
 
@@ -576,30 +579,43 @@ export function WatchPage({ itemID }: WatchPageProps) {
   }
 
   const playerFlex = `${Math.round(splitRatio * 1000) / 10}%`;
+  const iconJump = chromeSkinUrl("16/universal/location.svg");
+  const iconFind = chromeSkinUrl("16/universal/magnifier.svg");
+  const iconDisplay = chromeSkinUrl("20/universal/cog.svg");
+  const iconItemPane = chromeSkinUrl("20/universal/sidebar.svg");
   const iconOpen = chromeSkinUrl("16/universal/view.svg");
+
+  const openItemPane = useCallback(() => {
+    const win = Zotero.getMainWindow();
+    const context = (
+      win as unknown as {
+        ZoteroContextPane?: {
+          collapsed?: boolean;
+          togglePane?: () => void;
+        };
+      }
+    )?.ZoteroContextPane;
+    if (!context?.togglePane) return;
+    try {
+      const pane = Zotero.getActiveZoteroPane() as
+        | {
+            selectItem?: (
+              id: number,
+              options?: { noTabSwitch?: boolean },
+            ) => unknown;
+          }
+        | undefined;
+      void pane?.selectItem?.(itemID, { noTabSwitch: true });
+    } catch {
+      // Selection sync is best-effort; pane toggle still helps.
+    }
+    if (context.collapsed) {
+      context.togglePane();
+    }
+  }, [itemID]);
 
   return (
     <div ref={rootRef} className="yt-watch-root">
-      <header className="yt-watch-toolbar">
-        <h1 className="yt-watch-toolbar-title" title={data.title}>
-          {data.title}
-        </h1>
-        <div className="yt-watch-toolbar-actions">
-          <span className="yt-watch-time" title="Player time">
-            {formatTimestamp(currentTimeMs)}
-          </span>
-          <button
-            type="button"
-            className="yt-watch-tool-btn"
-            onClick={openInReader}
-            title={getString("watch-open-reader")}
-          >
-            <img src={iconOpen} alt="" width={14} height={14} />
-            <span>{getString("watch-open-reader")}</span>
-          </button>
-        </div>
-      </header>
-
       <div
         className="yt-watch-player-pane"
         style={{ flex: `0 0 ${playerFlex}` }}
@@ -617,6 +633,8 @@ export function WatchPage({ itemID }: WatchPageProps) {
         onPointerDown={onSplitterPointerDown}
         role="separator"
         aria-orientation="horizontal"
+        aria-label="Resize video and transcript"
+        title="Drag to resize"
       />
 
       <div
@@ -634,23 +652,6 @@ export function WatchPage({ itemID }: WatchPageProps) {
         }
       >
         <div className="yt-watch-float-controls">
-          <label className="yt-watch-toggle">
-            <input
-              type="checkbox"
-              checked={autoscroll}
-              onChange={(e) =>
-                setAutoscroll((e.currentTarget as HTMLInputElement).checked)
-              }
-            />
-            <span>{getString("watch-autoscroll")}</span>
-          </label>
-          <button
-            type="button"
-            className="yt-watch-tool-btn"
-            onClick={() => setJumpToken((n) => n + 1)}
-          >
-            {getString("watch-jump-current")}
-          </button>
           <button
             type="button"
             className={`yt-watch-tool-btn${displayOpen ? " active" : ""}`}
@@ -658,7 +659,32 @@ export function WatchPage({ itemID }: WatchPageProps) {
             aria-haspopup="dialog"
             onClick={() => setDisplayOpen((open) => !open)}
           >
-            {getString("watch-display")}
+            <img src={iconDisplay} alt="" width={14} height={14} />
+            <span>{getString("watch-display")}</span>
+          </button>
+          <button
+            type="button"
+            className="yt-watch-tool-btn"
+            onClick={openItemPane}
+            title={getString("watch-item-pane")}
+          >
+            <img
+              src={iconItemPane}
+              alt=""
+              width={14}
+              height={14}
+              className="yt-watch-icon-flip-x"
+            />
+            <span>{getString("watch-item-pane")}</span>
+          </button>
+          <button
+            type="button"
+            className="yt-watch-tool-btn"
+            onClick={openInReader}
+            title={getString("watch-open-reader")}
+          >
+            <img src={iconOpen} alt="" width={14} height={14} />
+            <span>{getString("watch-open-reader")}</span>
           </button>
           {displayOpen ? (
             <DisplaySettingsPopover
@@ -672,6 +698,67 @@ export function WatchPage({ itemID }: WatchPageProps) {
               onClose={() => setDisplayOpen(false)}
             />
           ) : null}
+        </div>
+        <div className="yt-watch-bottom-dock">
+          {findOpen ? (
+            <TranscriptFindBar
+              query={findQuery}
+              matchIndex={matchIndex}
+              matchCount={findMatches.length}
+              focusToken={findFocusToken}
+              onQueryChange={(query) => {
+                setFindQuery(query);
+                setMatchIndex(0);
+              }}
+              onPrev={goPrevMatch}
+              onNext={goNextMatch}
+              onClose={closeFind}
+            />
+          ) : null}
+          <div className="yt-watch-bottom-bar">
+            <label
+              className={`yt-watch-autoscroll-pill${
+                autoscroll ? " active" : ""
+              }`}
+              title={getString("watch-autoscroll")}
+            >
+              <input
+                type="checkbox"
+                checked={autoscroll}
+                onChange={(event) => {
+                  const next = (event.currentTarget as HTMLInputElement)
+                    .checked;
+                  setAutoscrollPaused(false);
+                  setAutoscrollPref(next);
+                }}
+              />
+              <span>{getString("watch-autoscroll")}</span>
+            </label>
+            {!autoscroll ? (
+              <button
+                type="button"
+                className="yt-watch-bottom-btn"
+                title={getString("watch-jump-current")}
+                onClick={() => setJumpToken((n) => n + 1)}
+              >
+                <img src={iconJump} alt="" width={14} height={14} />
+                <span>{getString("watch-jump-current")}</span>
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`yt-watch-bottom-btn${findOpen ? " active" : ""}`}
+              aria-pressed={findOpen}
+              title={getString("watch-find")}
+              onClick={() => {
+                if (findOpen) closeFind();
+                else openFind();
+              }}
+            >
+              <img src={iconFind} alt="" width={14} height={14} />
+              <span>{getString("watch-find")}</span>
+            </button>
+          </div>
         </div>
         {popoverPos && editingHighlight ? (
           <HighlightPopover
@@ -698,21 +785,6 @@ export function WatchPage({ itemID }: WatchPageProps) {
             onPick={(color) => void onHighlightColor(color)}
           />
         ) : null}
-        {findOpen ? (
-          <TranscriptFindBar
-            query={findQuery}
-            matchIndex={matchIndex}
-            matchCount={findMatches.length}
-            focusToken={findFocusToken}
-            onQueryChange={(query) => {
-              setFindQuery(query);
-              setMatchIndex(0);
-            }}
-            onPrev={goPrevMatch}
-            onNext={goNextMatch}
-            onClose={closeFind}
-          />
-        ) : null}
         <TranscriptPane
           blocks={blocks}
           currentTimeMs={currentTimeMs}
@@ -723,6 +795,7 @@ export function WatchPage({ itemID }: WatchPageProps) {
           findMatches={findMatches}
           activeMatchIndex={matchIndex}
           findActive={findOpen && findMatches.length > 0}
+          onUserScroll={() => setAutoscrollPaused(true)}
           onSeek={onSeek}
           onSelectionAnchor={onSelectionAnchorChange}
           onMarkClick={onMarkClick}

@@ -55,82 +55,59 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-splitter {
-  flex: 0 0 5px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 12px;
+  z-index: 2;
   cursor: row-resize;
-  background: var(--material-border, rgba(128, 128, 128, 0.35));
+  user-select: none;
+  background: var(--material-toolbar, var(--material-background, Canvas));
+  border-top: 1px solid var(--material-border, rgba(128, 128, 128, 0.4));
+  border-bottom: 1px solid var(--material-border, rgba(128, 128, 128, 0.4));
+  box-shadow: inset 0 1px 0
+    color-mix(in srgb, Canvas 55%, transparent);
+}
+
+/* Permanent grip so the resize affordance reads without hovering. */
+.yt-watch-splitter::before {
+  content: "";
+  width: 2.5rem;
+  height: 1px;
+  border-radius: 1px;
+  background: var(--fill-secondary, #888);
+  box-shadow:
+    0 -3px 0 var(--fill-secondary, #888),
+    0 3px 0 var(--fill-secondary, #888);
+  opacity: 0.55;
 }
 
 .yt-watch-splitter:hover {
+  background: color-mix(
+    in srgb,
+    var(--accent-blue, #2ea8e5) 14%,
+    var(--material-toolbar, var(--material-background, Canvas))
+  );
+}
+
+.yt-watch-splitter:hover::before {
+  opacity: 0.9;
   background: var(--accent-blue, #2ea8e5);
+  box-shadow:
+    0 -3px 0 var(--accent-blue, #2ea8e5),
+    0 3px 0 var(--accent-blue, #2ea8e5);
 }
 
-/* —— Toolbar —— */
-.yt-watch-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex: 0 0 auto;
-  min-height: 2.5rem;
-  padding: 0.45rem 0.85rem;
-  border-bottom: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
-  background: var(--material-toolbar, var(--material-background, Canvas));
-  color: var(--fill-primary, CanvasText);
+.yt-watch-splitter:active {
+  background: color-mix(
+    in srgb,
+    var(--accent-blue, #2ea8e5) 22%,
+    var(--material-toolbar, var(--material-background, Canvas))
+  );
 }
 
-.yt-watch-toolbar-title {
-  margin: 0;
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  color: var(--fill-primary, CanvasText);
-}
-
-.yt-watch-toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 0 0 auto;
-}
-
-.yt-watch-time {
-  display: inline-flex;
-  align-items: center;
-  min-width: 3.25rem;
-  justify-content: center;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--fill-secondary, #888) 14%, transparent);
-  font-size: 12px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  color: var(--fill-secondary, GrayText);
-}
-
-.yt-watch-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  font-size: 12px;
-  color: var(--fill-secondary, GrayText);
-  cursor: pointer;
-  user-select: none;
-  white-space: nowrap;
-}
-
-.yt-watch-toggle input {
-  margin: 0;
-}
-
-/* Floating controls: bottom-right of player / top-right of transcript.
+/* Floating controls: top-right of transcript.
    flex-basis:0 + min-height:0 so this region takes remaining height and
    scrolls inside .yt-watch-transcript-pane instead of growing the page. */
 .yt-watch-transcript-section {
@@ -166,19 +143,18 @@ tab-content[id^="yt-watch-"],
   opacity: 1;
 }
 
-/* —— Find bar (Cmd/Ctrl-F) —— */
+/* —— Find bar (Cmd/Ctrl-F) — above the centered bottom controls —— */
 .yt-watch-find-bar {
-  position: absolute;
-  top: 0.65rem;
-  left: 0.65rem;
-  z-index: 4;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  max-width: calc(100% - 10rem);
-  padding: 0.35rem 0.45rem;
+  gap: 0.3rem;
+  box-sizing: border-box;
+  /* Independent of the bottom button bar width. */
+  width: 20rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.3rem 0.4rem;
   border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
-  border-radius: 6px;
+  border-radius: 999px;
   background: color-mix(
     in srgb,
     var(--material-background, Canvas) 94%,
@@ -196,13 +172,13 @@ tab-content[id^="yt-watch-"],
 .yt-watch-find-input {
   appearance: none;
   box-sizing: border-box;
-  width: 11rem;
-  min-width: 6rem;
-  max-width: 40vw;
+  flex: 1 1 auto;
+  width: 0;
+  min-width: 0;
   margin: 0;
-  padding: 0.25rem 0.45rem;
+  padding: 0.25rem 0.55rem;
   border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
-  border-radius: 4px;
+  border-radius: 999px;
   background: var(--material-background, Canvas);
   color: inherit;
   font: inherit;
@@ -217,8 +193,7 @@ tab-content[id^="yt-watch-"],
 
 .yt-watch-find-status {
   flex: 0 0 auto;
-  min-width: 4.5rem;
-  padding: 0 0.15rem;
+  padding: 0 0.2rem;
   font-size: 11px;
   line-height: 1.2;
   color: var(--fill-secondary, #888);
@@ -287,42 +262,152 @@ tab-content[id^="yt-watch-"],
 
 .yt-watch-float-controls {
   position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
+  top: 0.45rem;
+  right: 0.45rem;
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.4rem;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.35));
-  border-radius: 6px;
+  gap: 0.1rem;
+  padding: 0.2rem;
+  border: none;
+  border-radius: 8px;
   background: color-mix(
     in srgb,
-    var(--material-background, Canvas) 92%,
+    var(--material-background, Canvas) 55%,
     transparent
   );
-  box-shadow: var(
-    --box-shadow-level-2,
-    0 1px 3px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08)
-  );
-  backdrop-filter: blur(8px);
+  box-shadow: none;
+  backdrop-filter: blur(12px);
 }
 
 .yt-watch-float-controls .yt-watch-tool-btn {
-  justify-content: center;
-  border-color: var(--material-border, rgba(128, 128, 128, 0.35));
-  background: var(--material-background, Canvas);
+  justify-content: flex-start;
+  gap: 0.45rem;
+  padding: 0.3rem 0.55rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--fill-secondary, GrayText);
   white-space: nowrap;
+}
+
+.yt-watch-float-controls .yt-watch-tool-btn img {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.yt-watch-icon-flip-x {
+  transform: scaleX(-1);
 }
 
 .yt-watch-float-controls .yt-watch-tool-btn:hover,
 .yt-watch-float-controls .yt-watch-tool-btn.active {
   background: color-mix(
     in srgb,
-    var(--fill-secondary, #888) 10%,
-    var(--material-background, Canvas)
+    var(--fill-secondary, #888) 12%,
+    transparent
+  );
+  color: var(--fill-primary, CanvasText);
+}
+
+.yt-watch-float-controls .yt-watch-tool-btn:hover img,
+.yt-watch-float-controls .yt-watch-tool-btn.active img {
+  opacity: 0.95;
+}
+
+/* Bottom floating dock — each child sizes itself; nothing stretches. */
+.yt-watch-bottom-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: max-content;
+  max-width: calc(100% - 1.5rem);
+  transform: translateX(-50%);
+}
+
+.yt-watch-bottom-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  width: max-content;
+  padding: 0.25rem;
+  border: 1px solid var(--material-border, rgba(128, 128, 128, 0.28));
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--material-background, Canvas) 82%,
+    transparent
+  );
+  box-shadow: var(
+    --box-shadow-level-1,
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.06)
+  );
+  backdrop-filter: blur(12px);
+}
+
+.yt-watch-autoscroll-pill,
+.yt-watch-bottom-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.35rem 0.75rem 0.35rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fill-secondary, GrayText);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.yt-watch-autoscroll-pill input[type="checkbox"] {
+  appearance: auto;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent-blue, #2ea8e5);
+  cursor: pointer;
+}
+
+.yt-watch-bottom-btn img {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.yt-watch-autoscroll-pill:hover,
+.yt-watch-bottom-btn:hover,
+.yt-watch-bottom-btn.active {
+  color: var(--fill-primary, CanvasText);
+  background: color-mix(
+    in srgb,
+    var(--fill-secondary, #888) 12%,
+    transparent
+  );
+}
+
+.yt-watch-bottom-btn:hover img,
+.yt-watch-bottom-btn.active img {
+  opacity: 0.95;
+}
+
+.yt-watch-autoscroll-pill.active {
+  color: var(--fill-primary, CanvasText);
+  background: color-mix(
+    in srgb,
+    var(--accent-blue, #2ea8e5) 14%,
+    transparent
   );
 }
 
@@ -386,18 +471,25 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-display-font {
+  /* Firefox/XUL buttons ignore flex-column content height unless forced. */
   appearance: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  -moz-appearance: none;
+  display: grid;
+  justify-items: center;
+  align-content: center;
   gap: 0.35rem;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  min-height: 4.75rem;
   margin: 0;
-  padding: 0.55rem 0.4rem 0.45rem;
+  padding: 0.65rem 0.4rem 0.55rem;
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
   color: inherit;
   cursor: pointer;
+  overflow: visible;
 }
 
 .yt-watch-display-font:hover {
@@ -414,8 +506,9 @@ tab-content[id^="yt-watch-"],
 }
 
 .yt-watch-display-font-sample {
+  display: block;
   font-size: 1.65rem;
-  line-height: 1;
+  line-height: 1.15;
 }
 
 .yt-watch-display-font.serif .yt-watch-display-font-sample {
@@ -658,7 +751,8 @@ tab-content[id^="yt-watch-"],
   box-sizing: border-box;
   width: min(40rem, 100%);
   margin: 0 auto;
-  padding: 1rem 1.25rem 2.5rem;
+  /* Extra bottom padding so the autoscroll pill does not cover the last lines. */
+  padding: 1rem 1.25rem 3.75rem;
 }
 
 .yt-watch-transcript-list {

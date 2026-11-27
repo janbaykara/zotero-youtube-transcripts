@@ -71,9 +71,11 @@ export function TranscriptFindBar({
           }
         }}
       />
-      <span className="yt-watch-find-status" aria-live="polite">
-        {status}
-      </span>
+      {status ? (
+        <span className="yt-watch-find-status" aria-live="polite">
+          {status}
+        </span>
+      ) : null}
       <button
         type="button"
         className="yt-watch-find-nav"

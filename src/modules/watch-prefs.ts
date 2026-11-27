@@ -31,9 +31,11 @@ function parseFont(raw: unknown): WatchFont {
 }
 
 export function useWatchAutoscroll() {
-  const [value, setValueState] = useState(() =>
-    Boolean(getPref("watchAutoscroll")),
-  );
+  const [value, setValueState] = useState(() => {
+    const raw = getPref("watchAutoscroll");
+    // Default on when unset — Boolean(undefined) would wrongly yield false.
+    return raw == null ? true : Boolean(raw);
+  });
 
   const setValue = useCallback((next: boolean) => {
     setPref("watchAutoscroll", next);

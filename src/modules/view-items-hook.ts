@@ -1,9 +1,4 @@
-import {
-  getRegularItem,
-  itemHasYouTubeUrl,
-  TRANSCRIPT_ATTACHMENT_TITLE,
-  TRANSCRIPT_TAG,
-} from "./youtube-item";
+import { getRegularItem, itemHasYouTubeUrl } from "./youtube-item";
 import { openWatchTab } from "./watch-tab";
 
 type ActivateFn = (event: Event, items: Zotero.Item[]) => void;
@@ -32,21 +27,10 @@ function isOurWrap(fn: ActivateFn | null | undefined): boolean {
   }
 }
 
-function isOurTranscriptAttachment(item: Zotero.Item): boolean {
-  if (!item.isAttachment()) return false;
-  if (item.getField("title") === TRANSCRIPT_ATTACHMENT_TITLE) return true;
-  return (
-    item.attachmentContentType === "text/html" &&
-    item.getTags().some((t) => t.tag === TRANSCRIPT_TAG)
-  );
-}
-
 /** True when activate should open the watch tab instead of default view. */
 function shouldOpenWatchTab(item: Zotero.Item): boolean {
-  if (!itemHasYouTubeUrl(item)) return false;
-  if (item.isRegularItem()) return true;
-  // Transcript HTML would otherwise open in the snapshot reader.
-  return isOurTranscriptAttachment(item);
+  // Only the parent item — transcript attachments open in the reader as usual.
+  return item.isRegularItem() && itemHasYouTubeUrl(item);
 }
 
 function install(win: _ZoteroTypes.MainWindow): void {

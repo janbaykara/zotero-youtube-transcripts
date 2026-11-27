@@ -42,6 +42,8 @@ interface TranscriptPaneProps {
   activeMatchIndex?: number;
   /** When true, skip player-driven autoscroll so find can own the viewport. */
   findActive?: boolean;
+  /** Fired on user-initiated scroll (not programmatic follow/find/jump). */
+  onUserScroll?: () => void;
   onSeek: (offsetMs: number) => void;
   onSelectionAnchor: (publish: SelectionPublish) => void;
   onMarkClick: (
@@ -234,6 +236,7 @@ export function TranscriptPane({
   findMatches = [],
   activeMatchIndex = -1,
   findActive = false,
+  onUserScroll,
   onSeek,
   onSelectionAnchor,
   onMarkClick,
@@ -248,6 +251,10 @@ export function TranscriptPane({
     lineOffsetMs: number;
     offset: number;
   } | null>(null);
+  const onUserScrollRef = useRef(onUserScroll);
+  onUserScrollRef.current = onUserScroll;
+  const autoscrollRef = useRef(autoscroll);
+  autoscrollRef.current = autoscroll;
 
   useEffect(() => {
     if (findActive) return;
@@ -342,7 +349,7 @@ export function TranscriptPane({
       if (
         closestIn(event.target, ".yt-watch-highlight-popover") ||
         closestIn(event.target, ".yt-watch-display-popover") ||
-        closestIn(event.target, ".yt-watch-find-bar")
+        closestIn(event.target, ".yt-watch-bottom-dock")
       ) {
         return;
       }
@@ -380,7 +387,7 @@ export function TranscriptPane({
         dragStartCaretRef.current &&
         !closestIn(event.target, ".yt-watch-highlight-popover") &&
         !closestIn(event.target, ".yt-watch-display-popover") &&
-        !closestIn(event.target, ".yt-watch-find-bar") &&
+        !closestIn(event.target, ".yt-watch-bottom-dock") &&
         !closestIn(event.target, ".yt-watch-line-time")
       ) {
         finalizeCreateSession(event.clientX, event.clientY);
@@ -399,17 +406,28 @@ export function TranscriptPane({
       syncScrolledFade();
     };
 
+    // Only real mouse/trackpad wheel input pauses autoscroll — not
+    // programmatic follow, find, jump, or layout-driven scroll events.
+    const onWheel = (event: WheelEvent) => {
+      if (!event.isTrusted) return;
+      if (event.deltaY === 0 && event.deltaX === 0) return;
+      if (!autoscrollRef.current) return;
+      onUserScrollRef.current?.();
+    };
+
     // No selectionchange listener — it re-enters publish after popover mount
     // re-renders caption nodes and can hang the chrome process.
 
     doc.addEventListener("pointerdown", onPointerDown, true);
     doc.addEventListener("pointerup", onPointerUp, true);
     pane.addEventListener("scroll", onScroll, { passive: true });
+    pane.addEventListener("wheel", onWheel, { passive: true });
 
     return () => {
       doc.removeEventListener("pointerdown", onPointerDown, true);
       doc.removeEventListener("pointerup", onPointerUp, true);
       pane.removeEventListener("scroll", onScroll);
+      pane.removeEventListener("wheel", onWheel);
       pane.classList.remove("is-selecting");
       pane
         .closest(".yt-watch-transcript-section")
